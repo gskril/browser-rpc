@@ -6,16 +6,11 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun run dev:server --",
     "dev:server": "bun run --filter @browser-rpc/server dev",
-    "dev:web": "bun run --filter @browser-rpc/web dev",
-    "dev:bundled": "bun run bundle:web && bun run --filter @browser-rpc/server start:bundled --",
-    "build:web": "bun run --filter @browser-rpc/web build",
+    "build:web": "bun run --filter @browser-rpc/web build && bun run --filter @browser-rpc/server sync-web",
     "build:server": "bun run --filter @browser-rpc/server build",
-    "bundle:web": "bun run build:web && bun run --filter @browser-rpc/server sync-web",
-    "build:bundled": "bun run build:web && bun run build:server && bun run --filter @browser-rpc/server sync-web",
-    "build": "bun run --filter '*' build",
+    "build": "bun run build:web && bun run build:server",
     "start": "bun run --filter @browser-rpc/server start",
-    "publish:server": "bun run build:bundled && cd packages/server && npm publish"
+    "publish:server": "bun run build && cd packages/server && npm publish"
   }
 }

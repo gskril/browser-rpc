@@ -90,6 +90,7 @@ The publish script:
 1. Builds the web package
 2. Copies `packages/web/dist` to `packages/server/web-dist`
 3. Publishes the server package with bundled web assets
+4. Note: `packages/server/web-dist` is gitignored but included in the npm tarball via the `files` list.
 
 ## Known Issues / TODOs
 

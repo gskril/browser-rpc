@@ -4,6 +4,8 @@ node_modules/
 # Build output
 dist/
 build/
+packages/web/dist/
+packages/server/web-dist/
 
 # Bun
 bun.lockb
