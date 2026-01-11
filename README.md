@@ -1,4 +1,4 @@
-# browser-rpc
+# Browser RPC Proxy
 
 A local RPC proxy that routes Ethereum transactions through your browser wallet instead of requiring private keys in `.env` files.
 
@@ -48,11 +48,32 @@ npx browser-rpc --rpc https://mainnet.base.org
 browser-rpc --rpc https://mainnet.base.org
 ```
 
-2. Configure your tool to use `http://localhost:8545` as the RPC URL
+2. Configure your script to use `http://localhost:8545` as the RPC URL
 
 3. Run your script - when it sends a transaction, your browser will open for approval
 
-### With Foundry
+### With viem
+
+```typescript
+import { createWalletClient, http } from 'viem'
+import { base } from 'viem/chains'
+
+const client = createWalletClient({
+  chain: base,
+  transport: http('http://localhost:8545', {
+    timeout: 1000 * 60, // Viem default timeout is 10 seconds
+  }),
+})
+
+// This will open your browser for approval
+const hash = await client.sendTransaction({
+  account: null,
+  to: '0x...',
+  value: parseEther('0.01'),
+})
+```
+
+### With Foundry (not tested)
 
 ```bash
 # Start the proxy
@@ -62,7 +83,7 @@ browser-rpc --rpc https://mainnet.base.org
 forge script script/Deploy.s.sol --rpc-url http://localhost:8545 --broadcast
 ```
 
-### With Hardhat
+### With Hardhat (not tested)
 
 ```javascript
 // hardhat.config.js
@@ -77,24 +98,6 @@ module.exports = {
 
 ```bash
 npx hardhat run scripts/deploy.js --network browserRpc
-```
-
-### With viem
-
-```typescript
-import { createWalletClient, http } from 'viem'
-import { base } from 'viem/chains'
-
-const client = createWalletClient({
-  chain: base,
-  transport: http('http://localhost:8545'),
-})
-
-// This will open your browser for approval
-const hash = await client.sendTransaction({
-  to: '0x...',
-  value: parseEther('0.01'),
-})
 ```
 
 ## CLI Options
