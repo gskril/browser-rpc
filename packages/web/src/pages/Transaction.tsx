@@ -1,14 +1,17 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useState } from 'react'
 import { useParams } from 'react-router'
-import { type Hex, formatEther, parseEther } from 'viem'
+import { type Hex, formatEther } from 'viem'
 import {
   useAccount,
+  useChainId,
   useSendTransaction,
   useSignMessage,
   useSignTypedData,
+  useSwitchChain,
 } from 'wagmi'
 
+import { useProxyChain } from '@/App'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -26,10 +29,50 @@ import {
 } from '@/hooks/usePendingTransaction'
 import { getBlockExplorerTxUrl } from '@/lib/wagmi'
 
+function ChainMismatchWarning({
+  expectedChainName,
+  expectedChainId,
+  walletChainId,
+}: {
+  expectedChainName: string
+  expectedChainId: number
+  walletChainId: number
+}) {
+  const { switchChain, isPending } = useSwitchChain()
+
+  const handleSwitch = () => {
+    switchChain({ chainId: expectedChainId })
+  }
+
+  return (
+    <div className="bg-destructive/10 border-destructive/20 mb-4 rounded-lg border p-4">
+      <p className="text-destructive mb-2 font-medium">Chain Mismatch</p>
+      <p className="text-muted-foreground mb-3 text-sm">
+        The server is configured for{' '}
+        <span className="font-medium">{expectedChainName}</span>, but your
+        wallet is connected to{' '}
+        <span className="font-medium">Chain {walletChainId}</span>.
+      </p>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleSwitch}
+        disabled={isPending}
+      >
+        {isPending ? 'Switching...' : `Switch to ${expectedChainName}`}
+      </Button>
+    </div>
+  )
+}
+
 export default function TransactionPage() {
   const { id } = useParams<{ id: string }>()
   const { data: pendingRequest, isLoading, error } = usePendingTransaction(id!)
   const { isConnected } = useAccount()
+  const walletChainId = useChainId()
+  const proxyChain = useProxyChain()
+
+  const hasChainMismatch = isConnected && walletChainId !== proxyChain.id
 
   if (isLoading) {
     return (
@@ -78,6 +121,13 @@ export default function TransactionPage() {
         </CardHeader>
 
         <CardContent>
+          {hasChainMismatch && (
+            <ChainMismatchWarning
+              expectedChainName={proxyChain.name}
+              expectedChainId={proxyChain.id}
+              walletChainId={walletChainId}
+            />
+          )}
           {pendingRequest.type === 'transaction' ? (
             <TransactionDetails request={pendingRequest} />
           ) : pendingRequest.type === 'signTypedData' ? (
@@ -89,7 +139,13 @@ export default function TransactionPage() {
 
         <CardFooter>
           {isConnected ? (
-            <ExecuteButton request={pendingRequest} />
+            hasChainMismatch ? (
+              <p className="text-muted-foreground w-full text-center text-sm">
+                Switch to the correct chain to continue
+              </p>
+            ) : (
+              <ExecuteButton request={pendingRequest} />
+            )
           ) : (
             <p className="text-muted-foreground w-full text-center text-sm">
               Connect your wallet to continue
@@ -106,6 +162,7 @@ function TransactionDetails({
 }: {
   request: Extract<PendingRequest, { type: 'transaction' }>
 }) {
+  const proxyChain = useProxyChain()
   const tx = request.transaction
 
   return (
@@ -126,7 +183,7 @@ function TransactionDetails({
         </Field>
       )}
       {tx.gas && <Field label="Gas Limit">{BigInt(tx.gas).toString()}</Field>}
-      {tx.chainId && <Field label="Chain ID">{parseInt(tx.chainId, 16)}</Field>}
+      <Field label="Chain">{proxyChain.name}</Field>
     </div>
   )
 }
@@ -187,6 +244,7 @@ function Field({
 }
 
 function ExecuteButton({ request }: { request: PendingRequest }) {
+  const proxyChain = useProxyChain()
   const [status, setStatus] = useState<
     'idle' | 'pending' | 'success' | 'error'
   >('idle')
@@ -231,10 +289,7 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
         }
 
         setTxHash(hash)
-        const chainId = tx.chainId ? parseInt(tx.chainId, 16) : undefined
-        const explorer = chainId
-          ? getBlockExplorerTxUrl(chainId, hash)
-          : undefined
+        const explorer = getBlockExplorerTxUrl(proxyChain, hash)
         setExplorerUrl(explorer ?? null)
         result = hash
       } else if (request.type === 'signTypedData') {

@@ -1,7 +1,13 @@
 {
-  "name": "@browser-rpc/server",
+  "name": "browser-rpc",
   "version": "0.1.0",
+  "description": "Local RPC proxy that routes Ethereum transactions through your browser wallet",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gskril/browser-rpc.git",
+    "directory": "packages/server"
+  },
   "main": "dist/index.js",
   "bin": {
     "browser-rpc": "dist/index.js"
@@ -15,8 +21,7 @@
     "build": "bun build src/index.ts --outdir dist --target node",
     "start": "bun run src/index.ts",
     "start:bundled": "bun run dist/index.js",
-    "sync-web": "rm -rf web-dist && cp -r ../web/dist ./web-dist",
-    "prepublishOnly": "bun run --filter @browser-rpc/web build && bun run sync-web && bun run build"
+    "sync-web": "rm -rf web-dist && cp -r ../web/dist ./web-dist"
   },
   "dependencies": {
     "hono": "^4.0.0",

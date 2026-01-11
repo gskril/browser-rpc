@@ -1,17 +1,17 @@
 {
-  "name": "browser-rpc",
+  "name": "browser-rpc-monorepo",
   "version": "0.1.0",
   "private": true,
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "dev:server": "bun run --filter @browser-rpc/server dev",
-    "build:web": "bun run --filter @browser-rpc/web build && bun run --filter @browser-rpc/server sync-web",
-    "build:server": "bun run --filter @browser-rpc/server build",
+    "dev:server": "bun run --filter browser-rpc dev",
+    "build:web": "bun run --filter @browser-rpc/web build && bun run --filter browser-rpc sync-web",
+    "build:server": "bun run --filter browser-rpc build",
     "build": "bun run build:web && bun run build:server",
-    "start": "bun run --filter @browser-rpc/server start",
-    "publish:server": "bun run build && cd packages/server && npm publish",
+    "start": "bun run --filter browser-rpc start",
+    "publish:server": "bun run build && cd packages/server && npm publish --provenance --access public",
     "format": "prettier --write ."
   },
   "devDependencies": {

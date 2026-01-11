@@ -190,7 +190,7 @@ bun run packages/server/src/index.ts -- \
 - **Build**: Vite 7
 - **Framework**: React 19
 - **Language**: TypeScript
-- **Wallet**: Wagmi 2.16 + RainbowKit 2.2 + Porto
+- **Wallet**: Wagmi 2.16 + RainbowKit 2.2
 - **Styling**: Tailwind CSS 4 + Shadcn/ui
 
 ### Scripts (`packages/scripts`)
@@ -233,6 +233,10 @@ bun run packages/server/src/index.ts -- \
 - [x] Add CLI argument parsing
 - [x] Add timeout handling for pending transactions (5 min)
 - [x] Create test scripts package
+- [x] Chain mismatch detection and switch chain UI
+- [x] Dynamic chain config (no hardcoded chains, fetches from proxy)
+- [x] Wallet transactions routed through proxy (`http('/')`)
+- [x] GitHub Actions workflow for npm publishing with provenance
 - [ ] **NEXT: End-to-end test with transfer script**
 - [ ] Test with Foundry scripts
 - [ ] Error handling improvements
@@ -246,4 +250,3 @@ bun run packages/server/src/index.ts -- \
 - Gas estimation display
 - Multi-chain support in single session
 - Persistent configuration file
-- npm package publishing
