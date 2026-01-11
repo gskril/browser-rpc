@@ -40,11 +40,11 @@ api.post("/tx/:id/hash", async (c) => {
 
   const request = getPendingRequest(id);
   if (!request) {
-    console.warn(`[pending] tx hash for unknown/expired id=${id}: ${body.hash}`);
+  console.warn(`🔐 Pending missing: id=${id} hash=${body.hash}`);
     return c.json({ error: "Request not found or expired" }, 404);
   }
 
-  console.log(`[pending] tx submitted id=${id} hash=${body.hash}`);
+  console.log(`🔐 Tx submitted: id=${id} hash=${body.hash}`);
   return c.json({ ok: true });
 });
 
