@@ -10,7 +10,7 @@ const { connectors } = getDefaultWallets({
   projectId: WALLETCONNECT_ID,
 })
 
-const chains = [base, mainnet] as const
+export const chains = [base, mainnet] as const
 
 export const wagmiConfig = createConfig({
   chains,
@@ -20,3 +20,10 @@ export const wagmiConfig = createConfig({
     [mainnet.id]: http(),
   },
 })
+
+export function getBlockExplorerTxUrl(chainId: number, hash: string): string | undefined {
+  const chain = wagmiConfig.chains.find((c) => c.id === chainId)
+  const baseUrl = chain?.blockExplorers?.default?.url
+  if (!baseUrl) return undefined
+  return `${baseUrl.replace(/\/$/, '')}/tx/${hash}`
+}

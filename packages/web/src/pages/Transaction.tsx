@@ -7,13 +7,14 @@ import {
   useSignTypedData,
 } from 'wagmi'
 import { parseEther, formatEther, type Hex } from 'viem'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   usePendingTransaction,
   completeRequest,
   notifyTransactionHash,
   type PendingRequest,
 } from '@/hooks/usePendingTransaction'
+import { getBlockExplorerTxUrl } from '@/lib/wagmi'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -189,6 +190,8 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
     'idle' | 'pending' | 'success' | 'error'
   >('idle')
   const [errorMessage, setErrorMessage] = useState<string>('')
+  const [txHash, setTxHash] = useState<string | null>(null)
+  const [explorerUrl, setExplorerUrl] = useState<string | null>(null)
 
   const { sendTransactionAsync } = useSendTransaction()
   const { signMessageAsync } = useSignMessage()
@@ -223,6 +226,10 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
           console.warn('Failed to notify server of transaction hash', notifyError)
         }
 
+        setTxHash(hash)
+        const chainId = tx.chainId ? parseInt(tx.chainId, 16) : undefined
+        const explorer = chainId ? getBlockExplorerTxUrl(chainId, hash) : undefined
+        setExplorerUrl(explorer ?? null)
         result = hash
       } else if (request.type === 'signTypedData') {
         const typedData = request.request.typedData as any
@@ -268,11 +275,31 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
 
   if (status === 'success') {
     return (
-      <div className="w-full text-center">
+      <div className="w-full text-center space-y-2">
         <p className="text-green-500 font-medium">Transaction submitted!</p>
-        <p className="text-sm text-muted-foreground mt-1">
-          You can close this tab.
-        </p>
+        {request.type === 'transaction' && txHash ? (
+          <div className="text-sm text-muted-foreground space-y-1">
+            <p className="break-all">
+              Hash:{' '}
+              <code className="bg-muted px-1 py-0.5 rounded text-[11px]">
+                {txHash}
+              </code>
+            </p>
+            {explorerUrl ? (
+              <p>
+                <a
+                  href={explorerUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-primary underline"
+                >
+                  View on block explorer
+                </a>
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+        <p className="text-sm text-muted-foreground">You can close this tab.</p>
       </div>
     )
   }
