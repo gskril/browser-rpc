@@ -1,29 +1,30 @@
-import { useParams } from 'react-router'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { useState } from 'react'
+import { useParams } from 'react-router'
+import { type Hex, formatEther, parseEther } from 'viem'
 import {
   useAccount,
   useSendTransaction,
   useSignMessage,
   useSignTypedData,
 } from 'wagmi'
-import { parseEther, formatEther, type Hex } from 'viem'
-import { useState } from 'react'
-import {
-  usePendingTransaction,
-  completeRequest,
-  notifyTransactionHash,
-  type PendingRequest,
-} from '@/hooks/usePendingTransaction'
-import { getBlockExplorerTxUrl } from '@/lib/wagmi'
+
 import { Button } from '@/components/ui/button'
 import {
   Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
 } from '@/components/ui/card'
+import {
+  type PendingRequest,
+  completeRequest,
+  notifyTransactionHash,
+  usePendingTransaction,
+} from '@/hooks/usePendingTransaction'
+import { getBlockExplorerTxUrl } from '@/lib/wagmi'
 
 export default function TransactionPage() {
   const { id } = useParams<{ id: string }>()
@@ -32,7 +33,7 @@ export default function TransactionPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <p className="text-muted-foreground">Loading transaction...</p>
       </div>
     )
@@ -40,7 +41,7 @@ export default function TransactionPage() {
 
   if (error || !pendingRequest) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="text-destructive">
@@ -56,7 +57,7 @@ export default function TransactionPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4">
+    <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-lg">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -65,8 +66,8 @@ export default function TransactionPage() {
                 {pendingRequest.type === 'transaction'
                   ? 'Transaction Request'
                   : pendingRequest.type === 'signTypedData'
-                  ? 'Sign Typed Data'
-                  : 'Sign Message'}
+                    ? 'Sign Typed Data'
+                    : 'Sign Message'}
               </CardTitle>
               <CardDescription>
                 Review and execute with your wallet
@@ -90,7 +91,7 @@ export default function TransactionPage() {
           {isConnected ? (
             <ExecuteButton request={pendingRequest} />
           ) : (
-            <p className="text-sm text-muted-foreground w-full text-center">
+            <p className="text-muted-foreground w-full text-center text-sm">
               Connect your wallet to continue
             </p>
           )}
@@ -119,7 +120,7 @@ function TransactionDetails({
       )}
       {tx.data && tx.data !== '0x' && (
         <Field label="Data">
-          <code className="text-xs break-all bg-muted p-2 rounded block max-h-32 overflow-auto">
+          <code className="bg-muted block max-h-32 overflow-auto rounded p-2 text-xs break-all">
             {tx.data}
           </code>
         </Field>
@@ -141,7 +142,7 @@ function SignTypedDataDetails({
         <code className="text-xs break-all">{request.request.address}</code>
       </Field>
       <Field label="Typed Data">
-        <code className="text-xs break-all bg-muted p-2 rounded block max-h-48 overflow-auto">
+        <code className="bg-muted block max-h-48 overflow-auto rounded p-2 text-xs break-all">
           {JSON.stringify(request.request.typedData, null, 2)}
         </code>
       </Field>
@@ -160,7 +161,7 @@ function SignMessageDetails({
         <code className="text-xs break-all">{request.address}</code>
       </Field>
       <Field label="Message">
-        <code className="text-xs break-all bg-muted p-2 rounded block max-h-32 overflow-auto">
+        <code className="bg-muted block max-h-32 overflow-auto rounded p-2 text-xs break-all">
           {request.message}
         </code>
       </Field>
@@ -177,7 +178,7 @@ function Field({
 }) {
   return (
     <div>
-      <dt className="text-sm font-medium text-muted-foreground mb-1">
+      <dt className="text-muted-foreground mb-1 text-sm font-medium">
         {label}
       </dt>
       <dd className="text-sm">{children}</dd>
@@ -223,12 +224,17 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
         try {
           await notifyTransactionHash(request.id, hash)
         } catch (notifyError) {
-          console.warn('Failed to notify server of transaction hash', notifyError)
+          console.warn(
+            'Failed to notify server of transaction hash',
+            notifyError
+          )
         }
 
         setTxHash(hash)
         const chainId = tx.chainId ? parseInt(tx.chainId, 16) : undefined
-        const explorer = chainId ? getBlockExplorerTxUrl(chainId, hash) : undefined
+        const explorer = chainId
+          ? getBlockExplorerTxUrl(chainId, hash)
+          : undefined
         setExplorerUrl(explorer ?? null)
         result = hash
       } else if (request.type === 'signTypedData') {
@@ -275,13 +281,13 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
 
   if (status === 'success') {
     return (
-      <div className="w-full text-center space-y-2">
-        <p className="text-green-500 font-medium">Transaction submitted!</p>
+      <div className="w-full space-y-2 text-center">
+        <p className="font-medium text-green-500">Transaction submitted!</p>
         {request.type === 'transaction' && txHash ? (
-          <div className="text-sm text-muted-foreground space-y-1">
+          <div className="text-muted-foreground space-y-1 text-sm">
             <p className="break-all">
               Hash:{' '}
-              <code className="bg-muted px-1 py-0.5 rounded text-[11px]">
+              <code className="bg-muted rounded px-1 py-0.5 text-[11px]">
                 {txHash}
               </code>
             </p>
@@ -299,7 +305,7 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
             ) : null}
           </div>
         ) : null}
-        <p className="text-sm text-muted-foreground">You can close this tab.</p>
+        <p className="text-muted-foreground text-sm">You can close this tab.</p>
       </div>
     )
   }
@@ -308,13 +314,13 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
     return (
       <div className="w-full text-center">
         <p className="text-destructive font-medium">Error</p>
-        <p className="text-sm text-muted-foreground mt-1">{errorMessage}</p>
+        <p className="text-muted-foreground mt-1 text-sm">{errorMessage}</p>
       </div>
     )
   }
 
   return (
-    <div className="flex gap-3 w-full">
+    <div className="flex w-full gap-3">
       <Button
         variant="outline"
         className="flex-1"

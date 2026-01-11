@@ -21,7 +21,10 @@ export const wagmiConfig = createConfig({
   },
 })
 
-export function getBlockExplorerTxUrl(chainId: number, hash: string): string | undefined {
+export function getBlockExplorerTxUrl(
+  chainId: number,
+  hash: string
+): string | undefined {
   const chain = wagmiConfig.chains.find((c) => c.id === chainId)
   const baseUrl = chain?.blockExplorers?.default?.url
   if (!baseUrl) return undefined

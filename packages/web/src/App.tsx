@@ -1,9 +1,9 @@
-import '@rainbow-me/rainbowkit/styles.css'
-
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { WagmiProvider } from 'wagmi'
 import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit'
-import { Routes, Route } from 'react-router'
+import '@rainbow-me/rainbowkit/styles.css'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Route, Routes } from 'react-router'
+import { WagmiProvider } from 'wagmi'
+
 import { wagmiConfig } from './lib/wagmi'
 import TransactionPage from './pages/Transaction'
 
@@ -14,13 +14,13 @@ export default function App() {
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider theme={darkTheme()}>
-          <div className="min-h-screen bg-background">
+          <div className="bg-background min-h-screen">
             <Routes>
               <Route path="/tx/:id" element={<TransactionPage />} />
               <Route
                 path="/"
                 element={
-                  <div className="flex items-center justify-center min-h-screen">
+                  <div className="flex min-h-screen items-center justify-center">
                     <p className="text-muted-foreground">
                       Waiting for transactions...
                     </p>

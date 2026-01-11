@@ -11,6 +11,12 @@
     "build:server": "bun run --filter @browser-rpc/server build",
     "build": "bun run build:web && bun run build:server",
     "start": "bun run --filter @browser-rpc/server start",
-    "publish:server": "bun run build && cd packages/server && npm publish"
+    "publish:server": "bun run build && cd packages/server && npm publish",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "6.0.2",
+    "prettier": "3.7.4",
+    "prettier-plugin-tailwindcss": "0.7.2"
   }
 }

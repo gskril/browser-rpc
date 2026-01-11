@@ -122,6 +122,9 @@ bun run packages/scripts/src/transfer.ts
 
 # Publish to npm
 bun run publish:server
+
+# Format code (run after major code changes)
+bun run format
 ```
 
 ## Package Versions (as of last update)
