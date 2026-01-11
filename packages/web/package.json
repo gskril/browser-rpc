@@ -1,6 +1,7 @@
 {
-  "name": "@rpc-proxy/web",
+  "name": "@browser-rpc/web",
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",

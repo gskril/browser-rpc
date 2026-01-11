@@ -1,76 +1,74 @@
 #!/usr/bin/env bun
 
-import { program } from "commander";
-import { createServer } from "./server";
+import { program } from 'commander'
+import { createServer } from './server'
 
 program
-  .name("rpc-proxy")
-  .description("Local RPC proxy for secure transaction signing via browser wallet")
-  .requiredOption("-r, --rpc <url>", "Upstream RPC URL for read calls")
-  .option("-p, --port <number>", "RPC proxy port", "8545")
-  .option("--ui-port <number>", "Web UI port", "5173")
-  .option("--no-open", "Disable auto-opening browser for transactions")
-  .parse();
+  .name('browser-rpc')
+  .description(
+    'Local RPC proxy for secure transaction signing via browser wallet'
+  )
+  .requiredOption('-r, --rpc <url>', 'Upstream RPC URL for read calls')
+  .option('-p, --port <number>', 'Server port', '8545')
+  .option('--no-open', 'Disable auto-opening browser for transactions')
+  .parse()
 
 const options = program.opts<{
-  rpc: string;
-  port: string;
-  uiPort: string;
-  open: boolean;
-}>();
+  rpc: string
+  port: string
+  open: boolean
+}>()
 
-const rpcPort = parseInt(options.port, 10);
-const uiPort = parseInt(options.uiPort, 10);
+const port = parseInt(options.port, 10)
 
 async function openBrowser(url: string) {
-  const args = [url];
-  let command: string;
+  const args = [url]
+  let command: string
 
-  if (process.platform === "darwin") {
-    command = "open";
-  } else if (process.platform === "win32") {
-    command = "cmd";
-    args.unshift("/c", "start", "");
+  if (process.platform === 'darwin') {
+    command = 'open'
+  } else if (process.platform === 'win32') {
+    command = 'cmd'
+    args.unshift('/c', 'start', '')
   } else {
-    command = "xdg-open";
+    command = 'xdg-open'
   }
 
   try {
-    Bun.spawn([command, ...args]);
+    Bun.spawn([command, ...args])
   } catch (error) {
-    console.error(`Failed to open browser: ${error}`);
+    console.error(`Failed to open browser: ${error}`)
   }
 }
 
 const server = createServer({
   upstreamRpcUrl: options.rpc,
-  uiPort,
+  port,
   onPendingRequest: (id, url) => {
-    console.log(`\n🔐 Transaction pending: ${url}`);
+    console.log(`\n🔐 Transaction pending: ${url}`)
     if (options.open) {
-      openBrowser(url);
+      openBrowser(url)
     }
   },
-});
+})
 
 Bun.serve({
   fetch: server.fetch,
-  port: rpcPort,
-});
+  port,
+})
 
 console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
-║                         rpc-proxy                             ║
+║                        browser-rpc                            ║
 ╚═══════════════════════════════════════════════════════════════╝
 
-  RPC Proxy:    http://localhost:${rpcPort}
+  Server:       http://localhost:${port}
   Upstream:     ${options.rpc}
-  Web UI:       http://localhost:${uiPort}
-  Auto-open:    ${options.open ? "enabled" : "disabled"}
+  Auto-open:    ${options.open ? 'enabled' : 'disabled'}
 
-  Use http://localhost:${rpcPort} as your RPC URL in Foundry/Hardhat.
+  Use http://localhost:${port} as your RPC URL in Foundry/Hardhat.
 
   Example:
-    forge script script/Deploy.s.sol --rpc-url http://localhost:${rpcPort}
+    forge script script/Deploy.s.sol --rpc-url http://localhost:${port}
 
-`);
+`)

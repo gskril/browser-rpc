@@ -1,10 +1,11 @@
-# rpc-proxy
+# browser-rpc
 
 A local RPC proxy that lets developers execute blockchain transactions through their browser wallet (MetaMask, hardware wallets, etc.) instead of managing separate deployer keys.
 
 ## Problem
 
 Deploying EVM smart contracts requires a private key. Most developers use a separate "deployer" key stored in a `.env` file, which:
+
 - Has weaker security than a browser wallet or hardware wallet
 - Requires maintaining ETH balances across multiple chains
 - Is a hassle to set up correctly
@@ -12,6 +13,7 @@ Deploying EVM smart contracts requires a private key. Most developers use a sepa
 ## Solution
 
 A local RPC proxy server that:
+
 1. Receives RPC calls from Foundry/Hardhat scripts
 2. Intercepts transaction requests and opens a browser UI
 3. Lets users execute transactions through their preferred wallet
@@ -21,15 +23,16 @@ A local RPC proxy server that:
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Foundry/HH     │────▶│   rpc-proxy     │────▶│  Upstream RPC   │
-│  Script         │◀────│   (localhost)   │◀────│  (Infura, etc)  │
+│  Foundry/HH     │────▶│   browser-rpc   │────▶│  Upstream RPC   │
+│  Script         │◀────│ (localhost:8545)│◀────│  (Infura, etc)  │
 └─────────────────┘     └────────┬────────┘     └─────────────────┘
                                  │
                                  │ Opens browser for signing
+                                 │ (serves web UI on same port)
                                  ▼
                         ┌─────────────────┐     ┌─────────────────┐
                         │    Web UI       │────▶│  Browser Wallet │
-                        │  (localhost)    │◀────│  (MetaMask)     │
+                        │ (localhost:8545)│◀────│  (MetaMask)     │
                         └─────────────────┘     └─────────────────┘
 ```
 
@@ -38,7 +41,7 @@ A local RPC proxy server that:
 1. Foundry calls `eth_sendTransaction` to `localhost:8545`
 2. Server generates unique request ID, stores tx data in memory
 3. Server holds the HTTP connection open (doesn't respond yet)
-4. Server opens `http://localhost:5173/tx/{id}` in browser (and logs URL)
+4. Server opens `http://localhost:8545/tx/{id}` in browser (and logs URL)
 5. Web UI loads, fetches pending tx data from `GET /api/pending/{id}`
 6. User connects wallet via Rainbowkit
 7. User reviews transaction details and clicks "Execute"
@@ -52,25 +55,25 @@ A local RPC proxy server that:
 
 ## RPC Method Routing
 
-| Method | Behavior |
-|--------|----------|
-| `eth_sendTransaction` | Intercept → open browser → wallet executes → return tx hash |
-| `eth_signTypedData*` | Intercept → open browser → wallet signs → return signature |
-| `eth_sign` | Intercept → open browser → wallet signs → return signature |
-| `eth_call` | Pass through to upstream RPC |
-| `eth_estimateGas` | Pass through to upstream RPC |
-| `eth_chainId` | Pass through to upstream RPC |
-| `eth_blockNumber` | Pass through to upstream RPC |
-| `eth_getBalance` | Pass through to upstream RPC |
-| `eth_getTransactionReceipt` | Pass through to upstream RPC |
-| Everything else | Pass through to upstream RPC |
+| Method                      | Behavior                                                    |
+| --------------------------- | ----------------------------------------------------------- |
+| `eth_sendTransaction`       | Intercept → open browser → wallet executes → return tx hash |
+| `eth_signTypedData*`        | Intercept → open browser → wallet signs → return signature  |
+| `eth_sign`                  | Intercept → open browser → wallet signs → return signature  |
+| `eth_call`                  | Pass through to upstream RPC                                |
+| `eth_estimateGas`           | Pass through to upstream RPC                                |
+| `eth_chainId`               | Pass through to upstream RPC                                |
+| `eth_blockNumber`           | Pass through to upstream RPC                                |
+| `eth_getBalance`            | Pass through to upstream RPC                                |
+| `eth_getTransactionReceipt` | Pass through to upstream RPC                                |
+| Everything else             | Pass through to upstream RPC                                |
 
 The code is structured to easily add new intercepted methods later (see `packages/server/src/rpc/methods.ts`).
 
 ## Project Structure
 
 ```
-rpc-proxy/
+browser-rpc/
 ├── packages/
 │   ├── server/                 # Hono RPC proxy server
 │   │   ├── src/
@@ -129,27 +132,27 @@ bun run packages/server/src/index.ts -- --rpc https://mainnet.base.org
 bun run packages/server/src/index.ts -- \
   --rpc https://mainnet.base.org \
   --port 8545 \
-  --ui-port 5173 \
   --no-open  # Disable auto-opening browser
 ```
 
 ### CLI Options
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--rpc`, `-r` | (required) | Upstream RPC URL for read calls |
-| `--port`, `-p` | `8545` | Port for the RPC proxy server |
-| `--ui-port` | `5173` | Port for the web UI |
-| `--no-open` | `false` | Disable auto-opening browser |
+| Flag           | Default    | Description                              |
+| -------------- | ---------- | ---------------------------------------- |
+| `--rpc`, `-r`  | (required) | Upstream RPC URL for read calls          |
+| `--port`, `-p` | `8545`     | Server port (serves both RPC and web UI) |
+| `--no-open`    | `false`    | Disable auto-opening browser             |
 
 ## Tech Stack
 
 ### Server (`packages/server`)
+
 - **Runtime**: Bun
 - **Framework**: Hono
 - **Language**: TypeScript
 
 ### Web UI (`packages/web`)
+
 - **Build**: Vite 7
 - **Framework**: React 19
 - **Language**: TypeScript
@@ -157,28 +160,33 @@ bun run packages/server/src/index.ts -- \
 - **Styling**: Tailwind CSS 4 + Shadcn/ui
 
 ### Scripts (`packages/scripts`)
+
 - **Runtime**: Bun
 - **Library**: viem 2.37
 
 ### Tooling
+
 - **Package Manager**: Bun
 - **Workspaces**: Bun workspaces
 
 ## Implementation Status
 
 ### Phase 1: Basic Infrastructure ✅
+
 - [x] Set up monorepo with Bun workspaces
 - [x] Create server package with Hono
 - [x] Create web package with Vite + React
 - [x] Implement basic RPC pass-through
 
 ### Phase 2: Transaction Interception ✅
+
 - [x] Implement pending transaction store
 - [x] Add `eth_sendTransaction` interception
 - [x] Add REST API for web UI (`/api/pending/:id`, `/api/complete/:id`)
 - [x] Implement browser opening logic
 
 ### Phase 3: Web UI ✅
+
 - [x] Set up Wagmi + Rainbowkit
 - [x] Set up Shadcn/ui (button, card)
 - [x] Build transaction review page
@@ -187,6 +195,7 @@ bun run packages/server/src/index.ts -- \
 - [x] Add callback to server on completion
 
 ### Phase 4: Testing & Polish 🔄
+
 - [x] Add CLI argument parsing
 - [x] Add timeout handling for pending transactions (5 min)
 - [x] Create test scripts package

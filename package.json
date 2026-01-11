@@ -1,11 +1,15 @@
 {
-  "name": "rpc-proxy",
+  "name": "browser-rpc",
   "version": "0.1.0",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "bun run --filter '*' dev",
+    "dev:server": "bun run --filter @browser-rpc/server dev",
+    "dev:web": "bun run --filter @browser-rpc/web dev",
     "build": "bun run --filter '*' build",
-    "start": "bun run --filter @rpc-proxy/server start"
+    "start": "bun run --filter @browser-rpc/server start",
+    "publish:server": "bun run --filter @browser-rpc/web build && cd packages/server && rm -rf web-dist && cp -r ../web/dist ./web-dist && npm publish"
   }
 }

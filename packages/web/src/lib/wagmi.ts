@@ -6,7 +6,7 @@ import { base, mainnet } from 'wagmi/chains'
 const WALLETCONNECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_ID || 'demo'
 
 const { connectors } = getDefaultWallets({
-  appName: 'rpc-proxy',
+  appName: 'browser-rpc',
   projectId: WALLETCONNECT_ID,
 })
 

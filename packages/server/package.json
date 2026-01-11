@@ -1,15 +1,20 @@
 {
-  "name": "@rpc-proxy/server",
+  "name": "@browser-rpc/server",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "rpc-proxy": "dist/index.js"
+    "browser-rpc": "dist/index.js"
   },
+  "files": [
+    "dist",
+    "web-dist"
+  ],
   "scripts": {
     "dev": "bun run --watch src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target node",
-    "start": "bun run src/index.ts"
+    "start": "bun run src/index.ts",
+    "prepublishOnly": "bun run build && cp -r ../web/dist ./web-dist"
   },
   "dependencies": {
     "hono": "^4.0.0",

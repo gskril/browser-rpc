@@ -1,6 +1,7 @@
 {
-  "name": "@rpc-proxy/scripts",
+  "name": "@browser-rpc/scripts",
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "transfer": "bun run src/transfer.ts"

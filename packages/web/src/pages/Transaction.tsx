@@ -1,19 +1,19 @@
-import { useParams } from "react-router";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useParams } from 'react-router'
+import { ConnectButton } from '@rainbow-me/rainbowkit'
 import {
   useAccount,
   useSendTransaction,
   useSignMessage,
   useSignTypedData,
-} from "wagmi";
-import { parseEther, formatEther, type Hex } from "viem";
-import { useState, useEffect } from "react";
+} from 'wagmi'
+import { parseEther, formatEther, type Hex } from 'viem'
+import { useState, useEffect } from 'react'
 import {
   usePendingTransaction,
   completeRequest,
   type PendingRequest,
-} from "@/hooks/usePendingTransaction";
-import { Button } from "@/components/ui/button";
+} from '@/hooks/usePendingTransaction'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardHeader,
@@ -21,19 +21,19 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
-} from "@/components/ui/card";
+} from '@/components/ui/card'
 
 export default function TransactionPage() {
-  const { id } = useParams<{ id: string }>();
-  const { data: pendingRequest, isLoading, error } = usePendingTransaction(id!);
-  const { isConnected } = useAccount();
+  const { id } = useParams<{ id: string }>()
+  const { data: pendingRequest, isLoading, error } = usePendingTransaction(id!)
+  const { isConnected } = useAccount()
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-muted-foreground">Loading transaction...</p>
       </div>
-    );
+    )
   }
 
   if (error || !pendingRequest) {
@@ -41,14 +41,16 @@ export default function TransactionPage() {
       <div className="flex items-center justify-center min-h-screen">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-destructive">Request Not Found</CardTitle>
+            <CardTitle className="text-destructive">
+              Request Not Found
+            </CardTitle>
             <CardDescription>
               This request may have expired or already been completed.
             </CardDescription>
           </CardHeader>
         </Card>
       </div>
-    );
+    )
   }
 
   return (
@@ -58,24 +60,24 @@ export default function TransactionPage() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>
-                {pendingRequest.type === "transaction"
-                  ? "Transaction Request"
-                  : pendingRequest.type === "signTypedData"
-                    ? "Sign Typed Data"
-                    : "Sign Message"}
+                {pendingRequest.type === 'transaction'
+                  ? 'Transaction Request'
+                  : pendingRequest.type === 'signTypedData'
+                  ? 'Sign Typed Data'
+                  : 'Sign Message'}
               </CardTitle>
               <CardDescription>
                 Review and execute with your wallet
               </CardDescription>
             </div>
-            <ConnectButton />
           </div>
+          <ConnectButton />
         </CardHeader>
 
         <CardContent>
-          {pendingRequest.type === "transaction" ? (
+          {pendingRequest.type === 'transaction' ? (
             <TransactionDetails request={pendingRequest} />
-          ) : pendingRequest.type === "signTypedData" ? (
+          ) : pendingRequest.type === 'signTypedData' ? (
             <SignTypedDataDetails request={pendingRequest} />
           ) : (
             <SignMessageDetails request={pendingRequest} />
@@ -93,15 +95,15 @@ export default function TransactionPage() {
         </CardFooter>
       </Card>
     </div>
-  );
+  )
 }
 
 function TransactionDetails({
   request,
 }: {
-  request: Extract<PendingRequest, { type: "transaction" }>;
+  request: Extract<PendingRequest, { type: 'transaction' }>
 }) {
-  const tx = request.transaction;
+  const tx = request.transaction
 
   return (
     <div className="space-y-4">
@@ -110,32 +112,26 @@ function TransactionDetails({
           <code className="text-xs break-all">{tx.to}</code>
         </Field>
       )}
-      {tx.value && tx.value !== "0x0" && (
-        <Field label="Value">
-          {formatEther(BigInt(tx.value))} ETH
-        </Field>
+      {tx.value && tx.value !== '0x0' && (
+        <Field label="Value">{formatEther(BigInt(tx.value))} ETH</Field>
       )}
-      {tx.data && tx.data !== "0x" && (
+      {tx.data && tx.data !== '0x' && (
         <Field label="Data">
           <code className="text-xs break-all bg-muted p-2 rounded block max-h-32 overflow-auto">
             {tx.data}
           </code>
         </Field>
       )}
-      {tx.gas && (
-        <Field label="Gas Limit">{BigInt(tx.gas).toString()}</Field>
-      )}
-      {tx.chainId && (
-        <Field label="Chain ID">{parseInt(tx.chainId, 16)}</Field>
-      )}
+      {tx.gas && <Field label="Gas Limit">{BigInt(tx.gas).toString()}</Field>}
+      {tx.chainId && <Field label="Chain ID">{parseInt(tx.chainId, 16)}</Field>}
     </div>
-  );
+  )
 }
 
 function SignTypedDataDetails({
   request,
 }: {
-  request: Extract<PendingRequest, { type: "signTypedData" }>;
+  request: Extract<PendingRequest, { type: 'signTypedData' }>
 }) {
   return (
     <div className="space-y-4">
@@ -148,13 +144,13 @@ function SignTypedDataDetails({
         </code>
       </Field>
     </div>
-  );
+  )
 }
 
 function SignMessageDetails({
   request,
 }: {
-  request: Extract<PendingRequest, { type: "sign" }>;
+  request: Extract<PendingRequest, { type: 'sign' }>
 }) {
   return (
     <div className="space-y-4">
@@ -167,15 +163,15 @@ function SignMessageDetails({
         </code>
       </Field>
     </div>
-  );
+  )
 }
 
 function Field({
   label,
   children,
 }: {
-  label: string;
-  children: React.ReactNode;
+  label: string
+  children: React.ReactNode
 }) {
   return (
     <div>
@@ -184,28 +180,28 @@ function Field({
       </dt>
       <dd className="text-sm">{children}</dd>
     </div>
-  );
+  )
 }
 
 function ExecuteButton({ request }: { request: PendingRequest }) {
-  const [status, setStatus] = useState<"idle" | "pending" | "success" | "error">(
-    "idle"
-  );
-  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [status, setStatus] = useState<
+    'idle' | 'pending' | 'success' | 'error'
+  >('idle')
+  const [errorMessage, setErrorMessage] = useState<string>('')
 
-  const { sendTransactionAsync } = useSendTransaction();
-  const { signMessageAsync } = useSignMessage();
-  const { signTypedDataAsync } = useSignTypedData();
+  const { sendTransactionAsync } = useSendTransaction()
+  const { signMessageAsync } = useSignMessage()
+  const { signTypedDataAsync } = useSignTypedData()
 
   const handleExecute = async () => {
-    setStatus("pending");
-    setErrorMessage("");
+    setStatus('pending')
+    setErrorMessage('')
 
     try {
-      let result: string;
+      let result: string
 
-      if (request.type === "transaction") {
-        const tx = request.transaction;
+      if (request.type === 'transaction') {
+        const tx = request.transaction
         const hash = await sendTransactionAsync({
           to: tx.to as Hex | undefined,
           value: tx.value ? BigInt(tx.value) : undefined,
@@ -218,51 +214,51 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
             : undefined,
           nonce: tx.nonce ? parseInt(tx.nonce, 16) : undefined,
           chainId: tx.chainId ? parseInt(tx.chainId, 16) : undefined,
-        });
-        result = hash;
-      } else if (request.type === "signTypedData") {
-        const typedData = request.request.typedData as any;
+        })
+        result = hash
+      } else if (request.type === 'signTypedData') {
+        const typedData = request.request.typedData as any
         const signature = await signTypedDataAsync({
           domain: typedData.domain,
           types: typedData.types,
           primaryType: typedData.primaryType,
           message: typedData.message,
-        });
-        result = signature;
+        })
+        result = signature
       } else {
         const signature = await signMessageAsync({
           message: request.message,
-        });
-        result = signature;
+        })
+        result = signature
       }
 
-      await completeRequest(request.id, { success: true, result });
-      setStatus("success");
+      await completeRequest(request.id, { success: true, result })
+      setStatus('success')
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setErrorMessage(message);
-      setStatus("error");
+      const message = err instanceof Error ? err.message : 'Unknown error'
+      setErrorMessage(message)
+      setStatus('error')
 
       // If user rejected, notify the server
-      if (message.includes("rejected") || message.includes("denied")) {
+      if (message.includes('rejected') || message.includes('denied')) {
         await completeRequest(request.id, {
           success: false,
-          error: "User rejected request",
-        });
+          error: 'User rejected request',
+        })
       }
     }
-  };
+  }
 
   const handleReject = async () => {
     await completeRequest(request.id, {
       success: false,
-      error: "User rejected request",
-    });
-    setStatus("error");
-    setErrorMessage("Request rejected");
-  };
+      error: 'User rejected request',
+    })
+    setStatus('error')
+    setErrorMessage('Request rejected')
+  }
 
-  if (status === "success") {
+  if (status === 'success') {
     return (
       <div className="w-full text-center">
         <p className="text-green-500 font-medium">Transaction submitted!</p>
@@ -270,16 +266,16 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
           You can close this tab.
         </p>
       </div>
-    );
+    )
   }
 
-  if (status === "error" && errorMessage) {
+  if (status === 'error' && errorMessage) {
     return (
       <div className="w-full text-center">
         <p className="text-destructive font-medium">Error</p>
         <p className="text-sm text-muted-foreground mt-1">{errorMessage}</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -288,17 +284,17 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
         variant="outline"
         className="flex-1"
         onClick={handleReject}
-        disabled={status === "pending"}
+        disabled={status === 'pending'}
       >
         Reject
       </Button>
       <Button
         className="flex-1"
         onClick={handleExecute}
-        disabled={status === "pending"}
+        disabled={status === 'pending'}
       >
-        {status === "pending" ? "Confirming..." : "Execute"}
+        {status === 'pending' ? 'Confirming...' : 'Execute'}
       </Button>
     </div>
-  );
+  )
 }

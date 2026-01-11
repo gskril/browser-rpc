@@ -9,7 +9,7 @@ const client = createWalletClient({
 })
 
 async function main() {
-  // This will be intercepted by rpc-proxy and opened in the browser
+  // This will be intercepted by browser-rpc and opened in the browser
   // The actual "from" address will be set by the connected wallet
 
   const hash = await client.sendTransaction({
