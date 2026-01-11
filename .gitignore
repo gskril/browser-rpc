@@ -6,6 +6,7 @@ dist/
 build/
 packages/web/dist/
 packages/server/web-dist/
+packages/server/README.md
 
 # Bun
 bun.lockb

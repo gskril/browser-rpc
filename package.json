@@ -10,7 +10,7 @@
     "build:server": "bun run --filter browser-rpc build",
     "build": "bun run build:web && bun run build:server",
     "start": "bun run --filter browser-rpc start",
-    "publish:server": "bun run build && cd packages/server && npm publish --provenance --access public",
+    "publish:server": "bun run build && cp README.md packages/server/ && cd packages/server && npm publish --provenance --access public",
     "format": "prettier --write ."
   },
   "devDependencies": {

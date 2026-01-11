@@ -14,7 +14,8 @@
   },
   "files": [
     "dist",
-    "web-dist"
+    "web-dist",
+    "README.md"
   ],
   "scripts": {
     "dev": "bun run --watch src/index.ts",
