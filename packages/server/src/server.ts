@@ -42,7 +42,7 @@ export function createServer(config: ServerConfig) {
   // RPC endpoint - handles both root and /rpc paths
   const handleRpc = async (c: any) => {
     try {
-      const body = await c.req.json<JsonRpcRequest | JsonRpcRequest[]>()
+      const body = await c.req.json()
 
       // Handle batch requests
       if (Array.isArray(body)) {
