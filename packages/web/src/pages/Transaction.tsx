@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react'
 import {
   usePendingTransaction,
   completeRequest,
+  notifyTransactionHash,
   type PendingRequest,
 } from '@/hooks/usePendingTransaction'
 import { Button } from '@/components/ui/button'
@@ -71,7 +72,7 @@ export default function TransactionPage() {
               </CardDescription>
             </div>
           </div>
-          <ConnectButton />
+          <ConnectButton showBalance={false} />
         </CardHeader>
 
         <CardContent>
@@ -215,6 +216,13 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
           nonce: tx.nonce ? parseInt(tx.nonce, 16) : undefined,
           chainId: tx.chainId ? parseInt(tx.chainId, 16) : undefined,
         })
+
+        try {
+          await notifyTransactionHash(request.id, hash)
+        } catch (notifyError) {
+          console.warn('Failed to notify server of transaction hash', notifyError)
+        }
+
         result = hash
       } else if (request.type === 'signTypedData') {
         const typedData = request.request.typedData as any

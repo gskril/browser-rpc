@@ -79,3 +79,20 @@ export async function completeRequest(
     throw new Error("Failed to complete request");
   }
 }
+
+export async function notifyTransactionHash(
+  id: string,
+  hash: string
+): Promise<void> {
+  const response = await fetch(`/api/tx/${id}/hash`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ hash }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to notify transaction hash");
+  }
+}
