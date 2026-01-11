@@ -84,10 +84,6 @@ function createPendingEntry(
     resolve: resolvePromise!,
   })
 
-  console.log(
-    `🔐 Pending saved: id=${id} type=${request.type} jsonrpc=${request.jsonRpcId}`
-  )
-
   // Auto-timeout
   setTimeout(() => {
     const entry = pending.get(id)

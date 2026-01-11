@@ -46,7 +46,7 @@ const server = createServer({
   upstreamRpcUrl: options.rpc,
   port,
   onPendingRequest: (id, url) => {
-    console.log(`\n🔐 Transaction pending: ${url}`)
+    console.log(`\n\x1b[33m⏳ Awaiting approval:\x1b[0m ${url}`)
     if (options.open) {
       openBrowser(url)
     }
