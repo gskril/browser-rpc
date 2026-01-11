@@ -30,5 +30,8 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Update npm
+        run: npm install -g npm@latest
+
       - name: Build and publish
         run: bun run publish:server
