@@ -1,6 +1,5 @@
 {
-  "name": "@browser-rpc/scripts",
-  "version": "0.1.0",
+  "name": "scripts",
   "private": true,
   "type": "module",
   "scripts": {

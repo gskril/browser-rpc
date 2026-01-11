@@ -1,13 +1,12 @@
 {
-  "name": "browser-rpc-monorepo",
-  "version": "0.1.0",
+  "name": "monorepo",
   "private": true,
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
     "dev:server": "bun run --filter browser-rpc dev",
-    "build:web": "bun run --filter @browser-rpc/web build && bun run --filter browser-rpc sync-web",
+    "build:web": "bun run --filter web build && bun run --filter browser-rpc sync-web",
     "build:server": "bun run --filter browser-rpc build",
     "build": "bun run build:web && bun run build:server",
     "start": "bun run --filter browser-rpc start",
