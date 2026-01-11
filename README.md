@@ -15,7 +15,17 @@ Deploying smart contracts requires signing transactions with a private key. Most
 `browser-rpc` is a local proxy server that intercepts transaction requests from your development tools (Foundry, Hardhat, viem scripts) and routes them through your browser wallet for signing.
 
 ```
-Foundry/Hardhat → browser-rpc (localhost:8545) → Browser Wallet → Network
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Foundry/HH     │────▶│   browser-rpc   │────▶│  Upstream RPC   │
+│  Script         │◀────│ (localhost:8545)│◀────│  (Alchemy, etc) │
+└─────────────────┘     └────────┬────────┘     └─────────────────┘
+                                 │
+                                 │ Opens browser for signing
+                                 ▼
+                        ┌─────────────────┐     ┌─────────────────┐
+                        │    Web UI       │────▶│  Browser Wallet │
+                        │ (localhost:8545)│◀────│  (MetaMask)     │
+                        └─────────────────┘     └─────────────────┘
 ```
 
 ## Installation
