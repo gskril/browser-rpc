@@ -25,12 +25,12 @@
     "sync-web": "rm -rf web-dist && cp -r ../web/dist ./web-dist"
   },
   "dependencies": {
-    "@hono/node-server": "^1.14.1",
+    "@hono/node-server": "1.19.8",
     "hono": "4.11.3",
     "commander": "14.0.2"
   },
   "devDependencies": {
-    "@types/node": "^22.15.18",
-    "typescript": "^5.0.0"
+    "@types/node": "22.19.5",
+    "typescript": "5.9.3"
   }
 }

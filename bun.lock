@@ -26,13 +26,13 @@
         "browser-rpc": "dist/index.js",
       },
       "dependencies": {
-        "@hono/node-server": "^1.14.1",
+        "@hono/node-server": "1.19.8",
         "commander": "14.0.2",
         "hono": "4.11.3",
       },
       "devDependencies": {
-        "@types/node": "^22.15.18",
-        "typescript": "^5.0.0",
+        "@types/node": "22.19.5",
+        "typescript": "5.9.3",
       },
     },
     "packages/web": {
