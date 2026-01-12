@@ -146,6 +146,15 @@ The proxy automatically detects the chain from your upstream RPC and configures 
 
 If your wallet is connected to the wrong chain, the UI will prompt you to switch.
 
+## Web UI
+
+The web UI is designed as a minimal, industrial developer tool:
+
+- **Light/dark theme** - Automatically matches your system preference
+- **Chain mismatch detection** - Warns if your wallet is on the wrong chain
+- **Address mismatch detection** - Warns if connected address differs from `--from`
+- **Sharp, utilitarian design** - No rounded corners, monospace fonts for addresses
+
 ## Development
 
 ```bash

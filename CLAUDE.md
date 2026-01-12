@@ -55,10 +55,12 @@ When the script runs, it should:
 
 ### Web UI
 
-- `packages/web/src/App.tsx` - Main app with providers, async chain loading, `useProxyChain` hook
-- `packages/web/src/pages/Transaction.tsx` - Transaction review/execute page with chain mismatch detection
+- `packages/web/src/App.tsx` - Main app with providers, async chain loading, `useProxyChain` hook, color scheme detection
+- `packages/web/src/pages/Transaction.tsx` - Transaction review/execute page with chain/address mismatch detection
 - `packages/web/src/lib/wagmi.ts` - Dynamic wagmi config (fetches chain from proxy)
 - `packages/web/src/hooks/usePendingTransaction.ts` - Fetch pending tx data
+- `packages/web/src/hooks/useServerConfig.ts` - Fetch server config (--from address)
+- `packages/web/src/index.css` - Theme variables, light/dark mode via prefers-color-scheme
 
 ### Scripts
 
@@ -81,6 +83,10 @@ When the script runs, it should:
 7. **Chain mismatch prevention**: The UI compares the proxy's chain with the wallet's connected chain and blocks execution if they don't match, offering a "Switch Chain" button.
 
 8. **Account handling**: The `--from` flag specifies the wallet address returned for `eth_accounts` and `eth_requestAccounts` calls. This is required for Hardhat, which queries the account for nonce lookups and gas estimation before submitting transactions. The address must match the wallet used in the browser.
+
+9. **UI Design System**: Industrial developer-tool aesthetic with sharp edges (no border-radius), system fonts (monospace for addresses/data), and automatic light/dark theming via CSS `prefers-color-scheme`. Teal accent color (#00E599 dark, #00A86B light). RainbowKit theme is synchronized with system preference.
+
+10. **Address mismatch warning**: The UI fetches `--from` address via `/api/config` and warns if the connected wallet differs. This helps catch configuration errors before transaction submission.
 
 ## Publishing
 

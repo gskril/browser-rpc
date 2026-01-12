@@ -30,6 +30,18 @@ import {
 import { useServerConfig } from '@/hooks/useServerConfig'
 import { getBlockExplorerTxUrl } from '@/lib/wagmi'
 
+function StatusIndicator({ status }: { status: 'error' | 'warning' | 'success' | 'pending' }) {
+  const colors = {
+    error: 'bg-red-500',
+    warning: 'bg-amber-500',
+    success: 'bg-primary',
+    pending: 'bg-muted-foreground animate-pulse',
+  }
+  return (
+    <div className={`w-2 h-2 ${colors[status]}`} />
+  )
+}
+
 function ChainMismatchWarning({
   expectedChainName,
   expectedChainId,
@@ -46,13 +58,15 @@ function ChainMismatchWarning({
   }
 
   return (
-    <div className="bg-destructive/10 border-destructive/20 mb-4 rounded-lg border p-4">
-      <p className="text-destructive mb-2 font-medium">Chain Mismatch</p>
-      <p className="text-muted-foreground mb-3 text-sm">
-        The server is configured for{' '}
-        <span className="font-medium">{expectedChainName}</span>, but your
-        wallet is connected to{' '}
-        <span className="font-medium">Chain {walletChainId}</span>.
+    <div className="border-2 border-red-500/50 bg-red-500/10 mb-4 p-4">
+      <div className="flex items-center gap-2 mb-2">
+        <StatusIndicator status="error" />
+        <p className="text-red-400 font-medium text-sm uppercase tracking-wider">Chain Mismatch</p>
+      </div>
+      <p className="text-muted-foreground mb-3 text-sm font-mono">
+        Expected: <span className="text-foreground">{expectedChainName}</span>
+        <br />
+        Connected: <span className="text-foreground">Chain {walletChainId}</span>
       </p>
       <Button
         variant="outline"
@@ -73,26 +87,25 @@ function AddressMismatchWarning({
   expectedAddress: string
   connectedAddress: string
 }) {
-  const truncate = (addr: string) =>
-    `${addr.slice(0, 6)}...${addr.slice(-4)}`
-
   return (
-    <div className="bg-yellow-500/10 border-yellow-500/20 mb-4 rounded-lg border p-4">
-      <p className="text-yellow-600 dark:text-yellow-500 mb-2 font-medium">
-        Address Mismatch
+    <div className="border-2 border-amber-500/50 bg-amber-500/10 mb-4 p-4">
+      <div className="flex items-center gap-2 mb-2">
+        <StatusIndicator status="warning" />
+        <p className="text-amber-400 font-medium text-sm uppercase tracking-wider">Address Mismatch</p>
+      </div>
+      <p className="text-muted-foreground text-sm mb-2">
+        Transaction may fail or be sent from unexpected account.
       </p>
-      <p className="text-muted-foreground text-sm">
-        The server expects transactions from{' '}
-        <code className="bg-muted rounded px-1 py-0.5 text-xs">
-          {truncate(expectedAddress)}
-        </code>
-        , but you're connected with{' '}
-        <code className="bg-muted rounded px-1 py-0.5 text-xs">
-          {truncate(connectedAddress)}
-        </code>
-        . The transaction may fail or be sent from a different account than
-        expected.
-      </p>
+      <div className="font-mono text-xs space-y-1">
+        <div className="flex gap-2">
+          <span className="text-muted-foreground w-20">Expected:</span>
+          <code className="text-foreground">{expectedAddress}</code>
+        </div>
+        <div className="flex gap-2">
+          <span className="text-muted-foreground w-20">Connected:</span>
+          <code className="text-foreground">{connectedAddress}</code>
+        </div>
+      </div>
     </div>
   )
 }
@@ -115,19 +128,25 @@ export default function TransactionPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading transaction...</p>
+        <div className="flex items-center gap-3">
+          <StatusIndicator status="pending" />
+          <p className="text-muted-foreground font-mono text-sm">Loading transaction...</p>
+        </div>
       </div>
     )
   }
 
   if (error || !pendingRequest) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-destructive">
-              Request Not Found
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <StatusIndicator status="error" />
+              <CardTitle className="text-red-400">
+                Request Not Found
+              </CardTitle>
+            </div>
             <CardDescription>
               This request may have expired or already been completed.
             </CardDescription>
@@ -139,23 +158,28 @@ export default function TransactionPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-lg">
+      <Card className="w-full max-w-xl">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>
-                {pendingRequest.type === 'transaction'
-                  ? 'Transaction Request'
-                  : pendingRequest.type === 'signTypedData'
-                    ? 'Sign Typed Data'
-                    : 'Sign Message'}
-              </CardTitle>
-              <CardDescription>
-                Review and execute with your wallet
-              </CardDescription>
+            <div className="flex items-center gap-3">
+              <div className="w-1 h-8 bg-primary" />
+              <div>
+                <CardTitle>
+                  {pendingRequest.type === 'transaction'
+                    ? 'Transaction Request'
+                    : pendingRequest.type === 'signTypedData'
+                      ? 'Sign Typed Data'
+                      : 'Sign Message'}
+                </CardTitle>
+                <CardDescription>
+                  Review and execute with your wallet
+                </CardDescription>
+              </div>
             </div>
           </div>
-          <ConnectButton showBalance={false} />
+          <div className="pt-4">
+            <ConnectButton showBalance={false} />
+          </div>
         </CardHeader>
 
         <CardContent>
@@ -181,17 +205,17 @@ export default function TransactionPage() {
           )}
         </CardContent>
 
-        <CardFooter>
+        <CardFooter className="border-t border-border pt-6">
           {isConnected ? (
             hasChainMismatch ? (
-              <p className="text-muted-foreground w-full text-center text-sm">
+              <p className="text-muted-foreground w-full text-center text-sm font-mono">
                 Switch to the correct chain to continue
               </p>
             ) : (
               <ExecuteButton request={pendingRequest} />
             )
           ) : (
-            <p className="text-muted-foreground w-full text-center text-sm">
+            <p className="text-muted-foreground w-full text-center text-sm font-mono">
               Connect your wallet to continue
             </p>
           )}
@@ -213,21 +237,29 @@ function TransactionDetails({
     <div className="space-y-4">
       {tx.to && (
         <Field label="To">
-          <code className="text-xs break-all">{tx.to}</code>
+          <code className="font-mono text-xs break-all text-primary">{tx.to}</code>
         </Field>
       )}
       {tx.value && tx.value !== '0x0' && (
-        <Field label="Value">{formatEther(BigInt(tx.value))} ETH</Field>
+        <Field label="Value">
+          <span className="font-mono">{formatEther(BigInt(tx.value))} ETH</span>
+        </Field>
       )}
       {tx.data && tx.data !== '0x' && (
         <Field label="Data">
-          <code className="bg-muted block max-h-32 overflow-auto rounded p-2 text-xs break-all">
+          <code className="bg-muted/50 border border-border block max-h-32 overflow-auto p-3 font-mono text-xs break-all">
             {tx.data}
           </code>
         </Field>
       )}
-      {tx.gas && <Field label="Gas Limit">{BigInt(tx.gas).toString()}</Field>}
-      <Field label="Chain">{proxyChain.name}</Field>
+      {tx.gas && (
+        <Field label="Gas Limit">
+          <span className="font-mono">{BigInt(tx.gas).toString()}</span>
+        </Field>
+      )}
+      <Field label="Chain">
+        <span className="font-mono">{proxyChain.name}</span>
+      </Field>
     </div>
   )
 }
@@ -240,10 +272,10 @@ function SignTypedDataDetails({
   return (
     <div className="space-y-4">
       <Field label="Address">
-        <code className="text-xs break-all">{request.request.address}</code>
+        <code className="font-mono text-xs break-all text-primary">{request.request.address}</code>
       </Field>
       <Field label="Typed Data">
-        <code className="bg-muted block max-h-48 overflow-auto rounded p-2 text-xs break-all">
+        <code className="bg-muted/50 border border-border block max-h-48 overflow-auto p-3 font-mono text-xs break-all whitespace-pre">
           {JSON.stringify(request.request.typedData, null, 2)}
         </code>
       </Field>
@@ -259,10 +291,10 @@ function SignMessageDetails({
   return (
     <div className="space-y-4">
       <Field label="Address">
-        <code className="text-xs break-all">{request.address}</code>
+        <code className="font-mono text-xs break-all text-primary">{request.address}</code>
       </Field>
       <Field label="Message">
-        <code className="bg-muted block max-h-32 overflow-auto rounded p-2 text-xs break-all">
+        <code className="bg-muted/50 border border-border block max-h-32 overflow-auto p-3 font-mono text-xs break-all">
           {request.message}
         </code>
       </Field>
@@ -279,7 +311,7 @@ function Field({
 }) {
   return (
     <div>
-      <dt className="text-muted-foreground mb-1 text-sm font-medium">
+      <dt className="text-muted-foreground mb-1.5 text-xs font-medium uppercase tracking-wider">
         {label}
       </dt>
       <dd className="text-sm">{children}</dd>
@@ -380,40 +412,45 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
 
   if (status === 'success') {
     return (
-      <div className="w-full space-y-2 text-center">
-        <p className="font-medium text-green-500">Transaction submitted!</p>
+      <div className="w-full space-y-3">
+        <div className="flex items-center justify-center gap-2">
+          <StatusIndicator status="success" />
+          <p className="font-medium text-primary uppercase tracking-wider text-sm">
+            Transaction Submitted
+          </p>
+        </div>
         {request.type === 'transaction' && txHash ? (
-          <div className="text-muted-foreground space-y-1 text-sm">
-            <p className="break-all">
-              Hash:{' '}
-              <code className="bg-muted rounded px-1 py-0.5 text-[11px]">
-                {txHash}
-              </code>
+          <div className="text-center space-y-2">
+            <p className="font-mono text-xs text-muted-foreground break-all">
+              {txHash}
             </p>
             {explorerUrl ? (
-              <p>
-                <a
-                  href={explorerUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-primary underline"
-                >
-                  View on block explorer
-                </a>
-              </p>
+              <a
+                href={explorerUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary text-sm underline underline-offset-4 hover:text-primary/80"
+              >
+                View on block explorer →
+              </a>
             ) : null}
           </div>
         ) : null}
-        <p className="text-muted-foreground text-sm">You can close this tab.</p>
+        <p className="text-muted-foreground text-center text-xs font-mono">
+          You can close this tab.
+        </p>
       </div>
     )
   }
 
   if (status === 'error' && errorMessage) {
     return (
-      <div className="w-full text-center">
-        <p className="text-destructive font-medium">Error</p>
-        <p className="text-muted-foreground mt-1 text-sm">{errorMessage}</p>
+      <div className="w-full text-center space-y-2">
+        <div className="flex items-center justify-center gap-2">
+          <StatusIndicator status="error" />
+          <p className="text-red-400 font-medium uppercase tracking-wider text-sm">Error</p>
+        </div>
+        <p className="text-muted-foreground text-sm font-mono">{errorMessage}</p>
       </div>
     )
   }
