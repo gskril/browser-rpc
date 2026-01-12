@@ -4,7 +4,7 @@ import { serve } from '@hono/node-server'
 import { spawn } from 'child_process'
 import { program } from 'commander'
 
-import { createServer } from './server'
+import { createServer } from './server.js'
 
 // Show help with examples when no args provided
 if (process.argv.length <= 2) {
@@ -59,18 +59,11 @@ const options = program.opts<{
 
 const port = parseInt(options.port, 10)
 
-function openBrowser(url: string) {
-  const args = [url]
-  let command: string
-
-  if (process.platform === 'darwin') {
-    command = 'open'
-  } else if (process.platform === 'win32') {
-    command = 'cmd'
-    args.unshift('/c', 'start', '')
-  } else {
-    command = 'xdg-open'
-  }
+function openBrowser(url: string): void {
+  const platform = process.platform
+  const command =
+    platform === 'darwin' ? 'open' : platform === 'win32' ? 'cmd' : 'xdg-open'
+  const args = platform === 'win32' ? ['/c', 'start', '', url] : [url]
 
   try {
     spawn(command, args, { detached: true, stdio: 'ignore' }).unref()

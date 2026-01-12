@@ -1,13 +1,14 @@
 import { serveStatic } from '@hono/node-server/serve-static'
 import { existsSync, readFileSync } from 'fs'
+import type { Context } from 'hono'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-import { api } from './api/routes'
-import { type RpcHandlerConfig, handleRpcRequest } from './rpc/handler'
-import type { JsonRpcRequest } from './rpc/types'
+import { api } from './api/routes.js'
+import { type RpcHandlerConfig, handleRpcRequest } from './rpc/handler.js'
+import type { JsonRpcRequest } from './rpc/types.js'
 
 // Resolve path to web dist folder
 // After build/publish: web-dist is bundled with the package
@@ -31,51 +32,42 @@ export interface ServerConfig {
   onPendingRequest: (id: string, url: string) => void
 }
 
-export function createServer(config: ServerConfig) {
+export function createServer(config: ServerConfig): Hono {
   const app = new Hono()
 
-  // Middleware
   app.use('*', cors())
-  app.use('*', async (c, next) => {
-    await next()
-  })
 
   // Mount API routes
   app.route('/api', api)
 
+  // Build handler config once
+  const rpcConfig: RpcHandlerConfig = {
+    upstreamRpcUrl: config.upstreamRpcUrl,
+    uiBaseUrl: `http://localhost:${config.port}`,
+    fromAddress: config.fromAddress,
+    onPendingRequest: config.onPendingRequest,
+  }
+
   // RPC endpoint - handles both root and /rpc paths
-  const handleRpc = async (c: any) => {
+  async function handleRpc(c: Context): Promise<Response> {
     try {
       const body = await c.req.json()
 
       // Handle batch requests
       if (Array.isArray(body)) {
-        const methods = body.map((req) => req.method).join(', ')
-        console.log(`\x1b[2m← [${methods}]\x1b[0m`)
+        const methods = body.map((req: JsonRpcRequest) => req.method).join(', ')
+        console.log(`\x1b[2m<- [${methods}]\x1b[0m`)
         const responses = await Promise.all(
-          body.map((req) =>
-            handleRpcRequest(req, {
-              upstreamRpcUrl: config.upstreamRpcUrl,
-              uiBaseUrl: `http://localhost:${config.port}`,
-              fromAddress: config.fromAddress,
-              onPendingRequest: config.onPendingRequest,
-            })
-          )
+          body.map((req: JsonRpcRequest) => handleRpcRequest(req, rpcConfig))
         )
         return c.json(responses)
       }
 
       // Single request
-      console.log(`\x1b[2m← ${body.method}\x1b[0m`)
-      const response = await handleRpcRequest(body, {
-        upstreamRpcUrl: config.upstreamRpcUrl,
-        uiBaseUrl: `http://localhost:${config.port}`,
-        fromAddress: config.fromAddress,
-        onPendingRequest: config.onPendingRequest,
-      })
-
+      console.log(`\x1b[2m<- ${body.method}\x1b[0m`)
+      const response = await handleRpcRequest(body, rpcConfig)
       return c.json(response)
-    } catch (error) {
+    } catch {
       return c.json(
         {
           jsonrpc: '2.0',

@@ -2,13 +2,17 @@ import {
   createPendingSign,
   createPendingSignTypedData,
   createPendingTransaction,
-} from '../pending/store'
-import { getInterceptedMethodType, shouldIntercept } from './methods'
+} from '../pending/store.js'
+import {
+  type InterceptedMethodType,
+  getInterceptedMethodType,
+  shouldIntercept,
+} from './methods.js'
 import type {
   JsonRpcRequest,
   JsonRpcResponse,
   TransactionRequest,
-} from './types'
+} from './types.js'
 
 export interface RpcHandlerConfig {
   upstreamRpcUrl: string
@@ -17,20 +21,31 @@ export interface RpcHandlerConfig {
   onPendingRequest: (id: string, url: string) => void
 }
 
+function createSuccessResponse(
+  id: number | string,
+  result: unknown
+): JsonRpcResponse {
+  return { jsonrpc: '2.0', id, result }
+}
+
+function createErrorResponse(
+  id: number | string,
+  code: number,
+  message: string
+): JsonRpcResponse {
+  return { jsonrpc: '2.0', id, error: { code, message } }
+}
+
 export async function handleRpcRequest(
   request: JsonRpcRequest,
   config: RpcHandlerConfig
 ): Promise<JsonRpcResponse> {
-  const { method, params, id } = request
+  const { method, id } = request
 
   // Handle eth_accounts and eth_requestAccounts specially
   if (method === 'eth_accounts' || method === 'eth_requestAccounts') {
     const accounts = config.fromAddress ? [config.fromAddress] : []
-    return {
-      jsonrpc: '2.0',
-      id,
-      result: accounts,
-    }
+    return createSuccessResponse(id, accounts)
   }
 
   if (shouldIntercept(method)) {
@@ -49,114 +64,51 @@ async function handleInterceptedMethod(
   const methodType = getInterceptedMethodType(method)
 
   if (!methodType) {
-    return {
-      jsonrpc: '2.0',
-      id,
-      error: {
-        code: -32601,
-        message: `Method ${method} not supported`,
-      },
-    }
+    return createErrorResponse(id, -32601, `Method ${method} not supported`)
   }
 
   try {
-    switch (methodType) {
-      case 'transaction': {
-        const tx = (params?.[0] as TransactionRequest) || {}
-        const pending = createPendingTransaction(id, tx)
-        const url = `${config.uiBaseUrl}/tx/${pending.id}`
-        config.onPendingRequest(pending.id, url)
+    const pending = createPendingRequest(methodType, method, params, id)
+    const url = `${config.uiBaseUrl}/tx/${pending.id}`
+    config.onPendingRequest(pending.id, url)
 
-        const result = await pending.promise
-        if (result.success) {
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: result.result,
-          }
-        } else {
-          return {
-            jsonrpc: '2.0',
-            id,
-            error: {
-              code: 4001,
-              message: result.error || 'User rejected request',
-            },
-          }
-        }
-      }
-
-      case 'signTypedData': {
-        // For eth_signTypedData_v4: params are [address, typedData]
-        const address = (params?.[0] as string) || ''
-        const typedData = params?.[1]
-        const pending = createPendingSignTypedData(id, address, typedData)
-        const url = `${config.uiBaseUrl}/tx/${pending.id}`
-        config.onPendingRequest(pending.id, url)
-
-        const result = await pending.promise
-        if (result.success) {
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: result.result,
-          }
-        } else {
-          return {
-            jsonrpc: '2.0',
-            id,
-            error: {
-              code: 4001,
-              message: result.error || 'User rejected request',
-            },
-          }
-        }
-      }
-
-      case 'sign': {
-        // eth_sign: [address, message]
-        // personal_sign: [message, address]
-        let address: string
-        let message: string
-        if (method === 'personal_sign') {
-          message = (params?.[0] as string) || ''
-          address = (params?.[1] as string) || ''
-        } else {
-          address = (params?.[0] as string) || ''
-          message = (params?.[1] as string) || ''
-        }
-
-        const pending = createPendingSign(id, address, message)
-        const url = `${config.uiBaseUrl}/tx/${pending.id}`
-        config.onPendingRequest(pending.id, url)
-
-        const result = await pending.promise
-        if (result.success) {
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: result.result,
-          }
-        } else {
-          return {
-            jsonrpc: '2.0',
-            id,
-            error: {
-              code: 4001,
-              message: result.error || 'User rejected request',
-            },
-          }
-        }
-      }
+    const result = await pending.promise
+    if (result.success) {
+      return createSuccessResponse(id, result.result)
     }
-  } catch (error) {
-    return {
-      jsonrpc: '2.0',
+    return createErrorResponse(
       id,
-      error: {
-        code: -32603,
-        message: error instanceof Error ? error.message : 'Internal error',
-      },
+      4001,
+      result.error || 'User rejected request'
+    )
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal error'
+    return createErrorResponse(id, -32603, message)
+  }
+}
+
+function createPendingRequest(
+  methodType: InterceptedMethodType,
+  method: string,
+  params: unknown[] | undefined,
+  id: number | string
+) {
+  switch (methodType) {
+    case 'transaction': {
+      const tx = (params?.[0] as TransactionRequest) || {}
+      return createPendingTransaction(id, tx)
+    }
+    case 'signTypedData': {
+      const address = (params?.[0] as string) || ''
+      const typedData = params?.[1]
+      return createPendingSignTypedData(id, address, typedData)
+    }
+    case 'sign': {
+      // eth_sign: [address, message], personal_sign: [message, address]
+      const isPersonalSign = method === 'personal_sign'
+      const address = (params?.[isPersonalSign ? 1 : 0] as string) || ''
+      const message = (params?.[isPersonalSign ? 0 : 1] as string) || ''
+      return createPendingSign(id, address, message)
     }
   }
 }
@@ -168,35 +120,21 @@ async function forwardToUpstream(
   try {
     const response = await fetch(upstreamUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
     })
 
     if (!response.ok) {
-      return {
-        jsonrpc: '2.0',
-        id: request.id,
-        error: {
-          code: -32603,
-          message: `Upstream RPC error: ${response.status} ${response.statusText}`,
-        },
-      }
+      const message = `Upstream RPC error: ${response.status} ${response.statusText}`
+      return createErrorResponse(request.id, -32603, message)
     }
 
     return (await response.json()) as JsonRpcResponse
   } catch (error) {
-    return {
-      jsonrpc: '2.0',
-      id: request.id,
-      error: {
-        code: -32603,
-        message:
-          error instanceof Error
-            ? `Upstream RPC error: ${error.message}`
-            : 'Failed to connect to upstream RPC',
-      },
-    }
+    const message =
+      error instanceof Error
+        ? `Upstream RPC error: ${error.message}`
+        : 'Failed to connect to upstream RPC'
+    return createErrorResponse(request.id, -32603, message)
   }
 }

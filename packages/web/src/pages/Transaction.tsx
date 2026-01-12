@@ -431,7 +431,9 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
         <div className="flex items-center justify-center gap-2">
           <StatusIndicator status="success" />
           <p className="text-primary text-sm font-medium tracking-wider uppercase">
-            {request.type === 'transaction' ? 'Transaction Submitted' : 'Message Signed'}
+            {request.type === 'transaction'
+              ? 'Transaction Submitted'
+              : 'Message Signed'}
           </p>
         </div>
         {request.type === 'transaction' && txHash ? (

@@ -8,39 +8,11 @@ const INTERCEPTED_METHODS = new Set([
   'personal_sign',
 ])
 
-// Methods that pass through to upstream RPC
-// This list is not exhaustive - anything not intercepted passes through
-const PASSTHROUGH_METHODS = new Set([
-  'eth_call',
-  'eth_estimateGas',
-  'eth_chainId',
-  'eth_blockNumber',
-  'eth_getBalance',
-  'eth_getTransactionReceipt',
-  'eth_getTransactionByHash',
-  'eth_getBlockByNumber',
-  'eth_getBlockByHash',
-  'eth_gasPrice',
-  'eth_maxPriorityFeePerGas',
-  'eth_getCode',
-  'eth_getStorageAt',
-  'eth_getTransactionCount',
-  'eth_getLogs',
-  'eth_accounts',
-  'eth_requestAccounts',
-  'net_version',
-  'web3_clientVersion',
-])
+export type InterceptedMethodType = 'transaction' | 'signTypedData' | 'sign'
 
 export function shouldIntercept(method: string): boolean {
   return INTERCEPTED_METHODS.has(method)
 }
-
-export function isKnownMethod(method: string): boolean {
-  return INTERCEPTED_METHODS.has(method) || PASSTHROUGH_METHODS.has(method)
-}
-
-export type InterceptedMethodType = 'transaction' | 'signTypedData' | 'sign'
 
 export function getInterceptedMethodType(
   method: string

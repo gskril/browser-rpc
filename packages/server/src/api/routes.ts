@@ -5,11 +5,10 @@ import {
   getAllPendingIds,
   getPendingRequest,
   resolvePendingRequest,
-} from '../pending/store'
+} from '../pending/store.js'
 
 const api = new Hono()
 
-// Enable CORS for web UI
 api.use('/*', cors())
 
 // Get a pending request by ID
@@ -20,18 +19,17 @@ api.get('/pending/:id', (c) => {
   if (!request) {
     return c.json({ error: 'Request not found or expired' }, 404)
   }
-
   return c.json(request)
 })
 
 // Record a submitted transaction hash (for logging/visibility)
 api.post('/tx/:id/hash', async (c) => {
   const { id } = c.req.param()
-  let body: { hash?: string } | null = null
 
+  let body: { hash?: string } | null = null
   try {
     body = await c.req.json<{ hash?: string }>()
-  } catch (err) {
+  } catch {
     return c.json({ error: 'Invalid JSON payload' }, 400)
   }
 
@@ -41,11 +39,11 @@ api.post('/tx/:id/hash', async (c) => {
 
   const request = getPendingRequest(id)
   if (!request) {
-    console.warn(`\x1b[31m✗ Unknown request:\x1b[0m ${id}`)
+    console.warn(`\x1b[31mx Unknown request:\x1b[0m ${id}`)
     return c.json({ error: 'Request not found or expired' }, 404)
   }
 
-  console.log(`\x1b[32m✓ Submitted:\x1b[0m ${body.hash}`)
+  console.log(`\x1b[32m+ Submitted:\x1b[0m ${body.hash}`)
   return c.json({ ok: true })
 })
 
@@ -67,7 +65,6 @@ api.post('/complete/:id', async (c) => {
   if (!resolved) {
     return c.json({ error: 'Request not found or already completed' }, 404)
   }
-
   return c.json({ ok: true })
 })
 

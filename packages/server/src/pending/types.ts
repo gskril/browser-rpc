@@ -1,4 +1,4 @@
-import type { SignTypedDataRequest, TransactionRequest } from '../rpc/types'
+import type { SignTypedDataRequest, TransactionRequest } from '../rpc/types.js'
 
 export type PendingRequestType = 'transaction' | 'signTypedData' | 'sign'
 

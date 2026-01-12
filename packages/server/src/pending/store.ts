@@ -1,18 +1,20 @@
 import { randomUUID } from 'crypto'
 
-import type { SignTypedDataRequest, TransactionRequest } from '../rpc/types'
+import type { TransactionRequest } from '../rpc/types.js'
 import type {
   PendingRequest,
   PendingRequestResult,
   PendingSignRequest,
   PendingSignTypedDataRequest,
   PendingTransactionRequest,
-} from './types'
+} from './types.js'
 
 interface PendingEntry {
   request: PendingRequest
   resolve: (result: PendingRequestResult) => void
 }
+
+type PendingResult = { id: string; promise: Promise<PendingRequestResult> }
 
 const pending = new Map<string, PendingEntry>()
 
@@ -21,7 +23,7 @@ const REQUEST_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
 export function createPendingTransaction(
   jsonRpcId: number | string,
   transaction: TransactionRequest
-): { id: string; promise: Promise<PendingRequestResult> } {
+): PendingResult {
   const id = randomUUID()
   const request: PendingTransactionRequest = {
     type: 'transaction',
@@ -30,7 +32,6 @@ export function createPendingTransaction(
     transaction,
     createdAt: Date.now(),
   }
-
   return createPendingEntry(id, request)
 }
 
@@ -38,7 +39,7 @@ export function createPendingSignTypedData(
   jsonRpcId: number | string,
   address: string,
   typedData: unknown
-): { id: string; promise: Promise<PendingRequestResult> } {
+): PendingResult {
   const id = randomUUID()
   const request: PendingSignTypedDataRequest = {
     type: 'signTypedData',
@@ -47,7 +48,6 @@ export function createPendingSignTypedData(
     request: { address, typedData },
     createdAt: Date.now(),
   }
-
   return createPendingEntry(id, request)
 }
 
@@ -55,7 +55,7 @@ export function createPendingSign(
   jsonRpcId: number | string,
   address: string,
   message: string
-): { id: string; promise: Promise<PendingRequestResult> } {
+): PendingResult {
   const id = randomUUID()
   const request: PendingSignRequest = {
     type: 'sign',
@@ -65,33 +65,26 @@ export function createPendingSign(
     message,
     createdAt: Date.now(),
   }
-
   return createPendingEntry(id, request)
 }
 
 function createPendingEntry(
   id: string,
   request: PendingRequest
-): { id: string; promise: Promise<PendingRequestResult> } {
-  let resolvePromise: (result: PendingRequestResult) => void
-
-  const promise = new Promise<PendingRequestResult>((resolve) => {
-    resolvePromise = resolve
+): PendingResult {
+  let resolve: (result: PendingRequestResult) => void
+  const promise = new Promise<PendingRequestResult>((res) => {
+    resolve = res
   })
 
-  pending.set(id, {
-    request,
-    resolve: resolvePromise!,
-  })
+  // Store entry (resolve is guaranteed assigned after Promise constructor)
+  pending.set(id, { request, resolve: resolve! })
 
-  // Auto-timeout
+  // Auto-timeout after 5 minutes
   setTimeout(() => {
     const entry = pending.get(id)
     if (entry) {
-      entry.resolve({
-        success: false,
-        error: 'Request timed out',
-      })
+      entry.resolve({ success: false, error: 'Request timed out' })
       pending.delete(id)
     }
   }, REQUEST_TIMEOUT_MS)
