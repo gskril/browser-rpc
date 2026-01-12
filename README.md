@@ -114,12 +114,12 @@ npx hardhat run scripts/deploy.js --network browserRpc
 
 ## CLI Options
 
-| Flag           | Default    | Description                                          |
-| -------------- | ---------- | ---------------------------------------------------- |
-| `--rpc`, `-r`  | (required) | Upstream RPC URL for read calls                      |
-| `--from`, `-f` | (none)     | Wallet address (returned for `eth_accounts`)         |
-| `--port`, `-p` | `8545`     | Port for the proxy server                            |
-| `--no-open`    | `false`    | Disable auto-opening the browser                     |
+| Flag           | Default    | Description                                  |
+| -------------- | ---------- | -------------------------------------------- |
+| `--rpc`, `-r`  | (required) | Upstream RPC URL for read calls              |
+| `--from`, `-f` | (none)     | Wallet address (returned for `eth_accounts`) |
+| `--port`, `-p` | `8545`     | Port for the proxy server                    |
+| `--no-open`    | `false`    | Disable auto-opening the browser             |
 
 ## How It Works
 
@@ -145,15 +145,6 @@ Read-only calls (`eth_call`, `eth_getBalance`, etc.) pass through directly to th
 The proxy automatically detects the chain from your upstream RPC and configures the UI accordingly. Any EVM-compatible chain is supported.
 
 If your wallet is connected to the wrong chain, the UI will prompt you to switch.
-
-## Web UI
-
-The web UI is designed as a minimal, industrial developer tool:
-
-- **Light/dark theme** - Automatically matches your system preference
-- **Chain mismatch detection** - Warns if your wallet is on the wrong chain
-- **Address mismatch detection** - Warns if connected address differs from `--from`
-- **Sharp, utilitarian design** - No rounded corners, monospace fonts for addresses
 
 ## Development
 
