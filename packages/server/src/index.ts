@@ -1,5 +1,7 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 
+import { serve } from '@hono/node-server'
+import { spawn } from 'child_process'
 import { program } from 'commander'
 
 import { createServer } from './server'
@@ -57,7 +59,7 @@ const options = program.opts<{
 
 const port = parseInt(options.port, 10)
 
-async function openBrowser(url: string) {
+function openBrowser(url: string) {
   const args = [url]
   let command: string
 
@@ -71,7 +73,7 @@ async function openBrowser(url: string) {
   }
 
   try {
-    Bun.spawn([command, ...args])
+    spawn(command, args, { detached: true, stdio: 'ignore' }).unref()
   } catch (error) {
     console.error(`Failed to open browser: ${error}`)
   }
@@ -89,7 +91,7 @@ const server = createServer({
   },
 })
 
-Bun.serve({
+serve({
   fetch: server.fetch,
   port,
 })

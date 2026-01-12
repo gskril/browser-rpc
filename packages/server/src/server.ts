@@ -1,8 +1,9 @@
-import { existsSync } from 'fs'
+import { serveStatic } from '@hono/node-server/serve-static'
+import { existsSync, readFileSync } from 'fs'
 import { Hono } from 'hono'
-import { serveStatic } from 'hono/bun'
 import { cors } from 'hono/cors'
 import path from 'path'
+import { fileURLToPath } from 'url'
 
 import { api } from './api/routes'
 import { type RpcHandlerConfig, handleRpcRequest } from './rpc/handler'
@@ -12,9 +13,11 @@ import type { JsonRpcRequest } from './rpc/types'
 // After build/publish: web-dist is bundled with the package
 // In development: falls back to ../web/dist
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 function resolveWebDistPath(): string {
-  const bundledPath = path.resolve(import.meta.dir, '../web-dist')
-  const devPath = path.resolve(import.meta.dir, '../../web/dist')
+  const bundledPath = path.resolve(__dirname, '../web-dist')
+  const devPath = path.resolve(__dirname, '../../web/dist')
   // Prefer bundled path (for published package), fall back to dev path
   if (existsSync(bundledPath)) return bundledPath
   return devPath
@@ -104,11 +107,11 @@ export function createServer(config: ServerConfig) {
   app.use('/assets/*', serveStatic({ root: webDistPath }))
 
   // SPA fallback - serve index.html for all other GET requests
-  app.get('*', async (c) => {
+  app.get('*', (c) => {
     const indexPath = path.join(webDistPath, 'index.html')
-    const file = Bun.file(indexPath)
-    if (await file.exists()) {
-      return c.html(await file.text())
+    if (existsSync(indexPath)) {
+      const html = readFileSync(indexPath, 'utf-8')
+      return c.html(html)
     }
     return c.text(
       "Web UI not found. Run 'bun run build' in packages/web first.",
