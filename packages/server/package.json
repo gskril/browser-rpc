@@ -1,6 +1,6 @@
 {
   "name": "browser-rpc",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Local RPC proxy that routes Ethereum transactions through your browser wallet",
   "type": "module",
   "repository": {
