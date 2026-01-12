@@ -30,16 +30,18 @@ import {
 import { useServerConfig } from '@/hooks/useServerConfig'
 import { getBlockExplorerTxUrl } from '@/lib/wagmi'
 
-function StatusIndicator({ status }: { status: 'error' | 'warning' | 'success' | 'pending' }) {
+function StatusIndicator({
+  status,
+}: {
+  status: 'error' | 'warning' | 'success' | 'pending'
+}) {
   const colors = {
     error: 'bg-red-500',
     warning: 'bg-amber-500',
     success: 'bg-primary',
     pending: 'bg-muted-foreground animate-pulse',
   }
-  return (
-    <div className={`w-2 h-2 ${colors[status]}`} />
-  )
+  return <div className={`h-2 w-2 ${colors[status]}`} />
 }
 
 function ChainMismatchWarning({
@@ -58,15 +60,18 @@ function ChainMismatchWarning({
   }
 
   return (
-    <div className="border-2 border-red-500/50 bg-red-500/10 mb-4 p-4">
-      <div className="flex items-center gap-2 mb-2">
+    <div className="mb-4 border-2 border-red-500/50 bg-red-500/10 p-4">
+      <div className="mb-2 flex items-center gap-2">
         <StatusIndicator status="error" />
-        <p className="text-red-400 font-medium text-sm uppercase tracking-wider">Chain Mismatch</p>
+        <p className="text-sm font-medium tracking-wider text-red-400 uppercase">
+          Chain Mismatch
+        </p>
       </div>
-      <p className="text-muted-foreground mb-3 text-sm font-mono">
+      <p className="text-muted-foreground mb-3 font-mono text-sm">
         Expected: <span className="text-foreground">{expectedChainName}</span>
         <br />
-        Connected: <span className="text-foreground">Chain {walletChainId}</span>
+        Connected:{' '}
+        <span className="text-foreground">Chain {walletChainId}</span>
       </p>
       <Button
         variant="outline"
@@ -88,15 +93,17 @@ function AddressMismatchWarning({
   connectedAddress: string
 }) {
   return (
-    <div className="border-2 border-amber-500/50 bg-amber-500/10 mb-4 p-4">
-      <div className="flex items-center gap-2 mb-2">
+    <div className="mb-4 border-2 border-amber-500/50 bg-amber-500/10 p-4">
+      <div className="mb-2 flex items-center gap-2">
         <StatusIndicator status="warning" />
-        <p className="text-amber-400 font-medium text-sm uppercase tracking-wider">Address Mismatch</p>
+        <p className="text-sm font-medium tracking-wider text-amber-400 uppercase">
+          Address Mismatch
+        </p>
       </div>
-      <p className="text-muted-foreground text-sm mb-2">
+      <p className="text-muted-foreground mb-2 text-sm">
         Transaction may fail or be sent from unexpected account.
       </p>
-      <div className="font-mono text-xs space-y-1">
+      <div className="space-y-1 font-mono text-xs">
         <div className="flex gap-2">
           <span className="text-muted-foreground w-20">Expected:</span>
           <code className="text-foreground">{expectedAddress}</code>
@@ -130,7 +137,9 @@ export default function TransactionPage() {
       <div className="flex min-h-screen items-center justify-center">
         <div className="flex items-center gap-3">
           <StatusIndicator status="pending" />
-          <p className="text-muted-foreground font-mono text-sm">Loading transaction...</p>
+          <p className="text-muted-foreground font-mono text-sm">
+            Loading transaction...
+          </p>
         </div>
       </div>
     )
@@ -143,9 +152,7 @@ export default function TransactionPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <StatusIndicator status="error" />
-              <CardTitle className="text-red-400">
-                Request Not Found
-              </CardTitle>
+              <CardTitle className="text-red-400">Request Not Found</CardTitle>
             </div>
             <CardDescription>
               This request may have expired or already been completed.
@@ -162,7 +169,7 @@ export default function TransactionPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-1 h-8 bg-primary" />
+              <div className="bg-primary h-8 w-1" />
               <div>
                 <CardTitle>
                   {pendingRequest.type === 'transaction'
@@ -190,12 +197,14 @@ export default function TransactionPage() {
               walletChainId={walletChainId}
             />
           )}
-          {hasAddressMismatch && serverConfig?.fromAddress && connectedAddress && (
-            <AddressMismatchWarning
-              expectedAddress={serverConfig.fromAddress}
-              connectedAddress={connectedAddress}
-            />
-          )}
+          {hasAddressMismatch &&
+            serverConfig?.fromAddress &&
+            connectedAddress && (
+              <AddressMismatchWarning
+                expectedAddress={serverConfig.fromAddress}
+                connectedAddress={connectedAddress}
+              />
+            )}
           {pendingRequest.type === 'transaction' ? (
             <TransactionDetails request={pendingRequest} />
           ) : pendingRequest.type === 'signTypedData' ? (
@@ -205,17 +214,17 @@ export default function TransactionPage() {
           )}
         </CardContent>
 
-        <CardFooter className="border-t border-border pt-6">
+        <CardFooter className="border-border border-t pt-6">
           {isConnected ? (
             hasChainMismatch ? (
-              <p className="text-muted-foreground w-full text-center text-sm font-mono">
+              <p className="text-muted-foreground w-full text-center font-mono text-sm">
                 Switch to the correct chain to continue
               </p>
             ) : (
               <ExecuteButton request={pendingRequest} />
             )
           ) : (
-            <p className="text-muted-foreground w-full text-center text-sm font-mono">
+            <p className="text-muted-foreground w-full text-center font-mono text-sm">
               Connect your wallet to continue
             </p>
           )}
@@ -237,7 +246,9 @@ function TransactionDetails({
     <div className="space-y-4">
       {tx.to && (
         <Field label="To">
-          <code className="font-mono text-xs break-all text-primary">{tx.to}</code>
+          <code className="text-primary font-mono text-xs break-all">
+            {tx.to}
+          </code>
         </Field>
       )}
       {tx.value && tx.value !== '0x0' && (
@@ -247,7 +258,7 @@ function TransactionDetails({
       )}
       {tx.data && tx.data !== '0x' && (
         <Field label="Data">
-          <code className="bg-muted/50 border border-border block max-h-32 overflow-auto p-3 font-mono text-xs break-all">
+          <code className="bg-muted/50 border-border block max-h-32 overflow-auto border p-3 font-mono text-xs break-all">
             {tx.data}
           </code>
         </Field>
@@ -272,10 +283,12 @@ function SignTypedDataDetails({
   return (
     <div className="space-y-4">
       <Field label="Address">
-        <code className="font-mono text-xs break-all text-primary">{request.request.address}</code>
+        <code className="text-primary font-mono text-xs break-all">
+          {request.request.address}
+        </code>
       </Field>
       <Field label="Typed Data">
-        <code className="bg-muted/50 border border-border block max-h-48 overflow-auto p-3 font-mono text-xs break-all whitespace-pre">
+        <code className="bg-muted/50 border-border block max-h-48 overflow-auto border p-3 font-mono text-xs break-all whitespace-pre">
           {JSON.stringify(request.request.typedData, null, 2)}
         </code>
       </Field>
@@ -291,10 +304,12 @@ function SignMessageDetails({
   return (
     <div className="space-y-4">
       <Field label="Address">
-        <code className="font-mono text-xs break-all text-primary">{request.address}</code>
+        <code className="text-primary font-mono text-xs break-all">
+          {request.address}
+        </code>
       </Field>
       <Field label="Message">
-        <code className="bg-muted/50 border border-border block max-h-32 overflow-auto p-3 font-mono text-xs break-all">
+        <code className="bg-muted/50 border-border block max-h-32 overflow-auto border p-3 font-mono text-xs break-all">
           {request.message}
         </code>
       </Field>
@@ -311,7 +326,7 @@ function Field({
 }) {
   return (
     <div>
-      <dt className="text-muted-foreground mb-1.5 text-xs font-medium uppercase tracking-wider">
+      <dt className="text-muted-foreground mb-1.5 text-xs font-medium tracking-wider uppercase">
         {label}
       </dt>
       <dd className="text-sm">{children}</dd>
@@ -415,13 +430,13 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
       <div className="w-full space-y-3">
         <div className="flex items-center justify-center gap-2">
           <StatusIndicator status="success" />
-          <p className="font-medium text-primary uppercase tracking-wider text-sm">
+          <p className="text-primary text-sm font-medium tracking-wider uppercase">
             Transaction Submitted
           </p>
         </div>
         {request.type === 'transaction' && txHash ? (
-          <div className="text-center space-y-2">
-            <p className="font-mono text-xs text-muted-foreground break-all">
+          <div className="space-y-2 text-center">
+            <p className="text-muted-foreground font-mono text-xs break-all">
               {txHash}
             </p>
             {explorerUrl ? (
@@ -429,14 +444,14 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
                 href={explorerUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="text-primary text-sm underline underline-offset-4 hover:text-primary/80"
+                className="text-primary hover:text-primary/80 text-sm underline underline-offset-4"
               >
                 View on block explorer →
               </a>
             ) : null}
           </div>
         ) : null}
-        <p className="text-muted-foreground text-center text-xs font-mono">
+        <p className="text-muted-foreground text-center font-mono text-xs">
           You can close this tab.
         </p>
       </div>
@@ -445,12 +460,16 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
 
   if (status === 'error' && errorMessage) {
     return (
-      <div className="w-full text-center space-y-2">
+      <div className="w-full space-y-2 text-center">
         <div className="flex items-center justify-center gap-2">
           <StatusIndicator status="error" />
-          <p className="text-red-400 font-medium uppercase tracking-wider text-sm">Error</p>
+          <p className="text-sm font-medium tracking-wider text-red-400 uppercase">
+            Error
+          </p>
         </div>
-        <p className="text-muted-foreground text-sm font-mono">{errorMessage}</p>
+        <p className="text-muted-foreground font-mono text-sm">
+          {errorMessage}
+        </p>
       </div>
     )
   }

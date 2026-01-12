@@ -1,4 +1,8 @@
-import { RainbowKitProvider, darkTheme, lightTheme } from '@rainbow-me/rainbowkit'
+import {
+  RainbowKitProvider,
+  darkTheme,
+  lightTheme,
+} from '@rainbow-me/rainbowkit'
 import '@rainbow-me/rainbowkit/styles.css'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createContext, useContext, useEffect, useState } from 'react'
@@ -53,14 +57,14 @@ export default function App() {
   if (error) {
     return (
       <div className="bg-background flex min-h-screen items-center justify-center">
-        <div className="border-2 border-red-500/50 bg-red-500/10 p-6 max-w-md">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 bg-red-500" />
-            <p className="text-red-400 font-medium text-sm uppercase tracking-wider">
+        <div className="max-w-md border-2 border-red-500/50 bg-red-500/10 p-6">
+          <div className="mb-2 flex items-center gap-2">
+            <div className="h-2 w-2 bg-red-500" />
+            <p className="text-sm font-medium tracking-wider text-red-400 uppercase">
               Connection Failed
             </p>
           </div>
-          <p className="text-muted-foreground text-sm font-mono">{error}</p>
+          <p className="text-muted-foreground font-mono text-sm">{error}</p>
         </div>
       </div>
     )
@@ -70,7 +74,7 @@ export default function App() {
     return (
       <div className="bg-background flex min-h-screen items-center justify-center">
         <div className="flex items-center gap-3">
-          <div className="w-2 h-2 bg-muted-foreground animate-pulse" />
+          <div className="bg-muted-foreground h-2 w-2 animate-pulse" />
           <p className="text-muted-foreground font-mono text-sm">
             Connecting to proxy server...
           </p>
@@ -91,10 +95,10 @@ export default function App() {
                   path="/"
                   element={
                     <div className="flex min-h-screen items-center justify-center">
-                      <div className="text-center space-y-4">
+                      <div className="space-y-4 text-center">
                         <div className="flex items-center justify-center gap-3">
-                          <div className="w-2 h-2 bg-primary animate-pulse" />
-                          <p className="text-muted-foreground font-mono text-sm uppercase tracking-wider">
+                          <div className="bg-primary h-2 w-2 animate-pulse" />
+                          <p className="text-muted-foreground font-mono text-sm tracking-wider uppercase">
                             Awaiting Transactions
                           </p>
                         </div>
