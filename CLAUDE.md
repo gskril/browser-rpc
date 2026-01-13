@@ -17,7 +17,7 @@ All core components are built and working. The proxy has been tested with Hardha
 - Server starts and serves both RPC endpoint and web UI on a single port
 - Transaction interception logic is implemented
 - Web UI builds and renders
-- Wallet connection via RainbowKit works
+- Wallet connection with custom multi-wallet selector (wagmi v3)
 - API endpoints for pending transactions exist
 - Full end-to-end flow: script → server → browser → wallet → back to script
 - The transfer test script in `packages/scripts/src/transfer.ts` is ready to use
@@ -56,6 +56,7 @@ When the script runs, it should:
 ### Web UI
 
 - `packages/web/src/App.tsx` - Main app with providers, async chain loading, `useProxyChain` hook, color scheme detection
+- `packages/web/src/components/ConnectButton.tsx` - Custom wallet selector with inline multi-wallet support
 - `packages/web/src/pages/Transaction.tsx` - Transaction review/execute page with chain/address mismatch detection
 - `packages/web/src/lib/wagmi.ts` - Dynamic wagmi config (fetches chain from proxy)
 - `packages/web/src/hooks/usePendingTransaction.ts` - Fetch pending tx data
@@ -84,7 +85,7 @@ When the script runs, it should:
 
 8. **Account handling**: The `--from` flag specifies the wallet address returned for `eth_accounts` and `eth_requestAccounts` calls. This is required for Hardhat, which queries the account for nonce lookups and gas estimation before submitting transactions. The address must match the wallet used in the browser.
 
-9. **UI Design System**: Industrial developer-tool aesthetic with sharp edges (no border-radius), system fonts (monospace for addresses/data), and automatic light/dark theming via CSS `prefers-color-scheme`. Teal accent color (#00E599 dark, #00A86B light). RainbowKit theme is synchronized with system preference.
+9. **UI Design System**: Industrial developer-tool aesthetic with sharp edges (no border-radius), system fonts (monospace for addresses/data), and automatic light/dark theming via CSS `prefers-color-scheme`. Teal accent color (#00E599 dark, #00A86B light). Custom wallet selector lists all detected injected wallets with inline display.
 
 10. **Address mismatch warning**: The UI fetches `--from` address via `/api/config` and warns if the connected wallet differs. This helps catch configuration errors before transaction submission.
 
@@ -159,7 +160,16 @@ bun run format
 - Hono: 4.x
 - React: 19.2
 - Vite: 7.3
-- Wagmi: 2.16
-- RainbowKit: 2.2
-- viem: 2.37
+- Wagmi: 3.3.2
+- viem: 2.44.0
 - Tailwind CSS: 4.1
+
+## Wallet Connection
+
+The web UI uses wagmi v3 with a custom wallet selector that:
+
+- Automatically detects all injected browser wallets (MetaMask, Coinbase Wallet, Rabby, etc.)
+- Shows an inline list when multiple wallets are detected
+- Displays wallet icons and names for easy identification
+- Connects directly if only one wallet is installed
+- Provides a simple "Back" button to return to the connect state

@@ -9,21 +9,24 @@ export function ConnectButton() {
   const { disconnect } = useDisconnect()
   const [showWallets, setShowWallets] = useState(false)
 
+  // Filter to only show injected connectors (browser wallets)
+  const wallets = connectors.filter((c) => c.type === 'injected')
+
   if (isConnected && address) {
     return (
       <div className="flex items-center gap-3">
-        <code className="text-muted-foreground font-mono text-sm">
-          {address.slice(0, 6)}...{address.slice(-4)}
-        </code>
+        <div className="flex items-center gap-2">
+          <div className="bg-primary h-1.5 w-1.5 animate-pulse" />
+          <code className="text-muted-foreground font-mono text-sm">
+            {address.slice(0, 6)}...{address.slice(-4)}
+          </code>
+        </div>
         <Button variant="outline" size="sm" onClick={() => disconnect()}>
           Disconnect
         </Button>
       </div>
     )
   }
-
-  // Filter to only show injected connectors (browser wallets)
-  const wallets = connectors.filter((c) => c.type === 'injected')
 
   if (wallets.length === 0) {
     return (
@@ -33,54 +36,57 @@ export function ConnectButton() {
     )
   }
 
-  // Show wallet selector if user clicked connect or if multiple wallets
-  if (showWallets || wallets.length > 1) {
+  function handleConnect() {
+    const firstWallet = wallets[0]
+    if (wallets.length === 1 && firstWallet) {
+      connect({ connector: firstWallet })
+    } else {
+      setShowWallets(true)
+    }
+  }
+
+  // Show wallet selector inline if multiple wallets or user clicked
+  if (showWallets && wallets.length > 1) {
     return (
-      <div className="space-y-2">
-        <div className="text-muted-foreground mb-3 text-xs font-medium tracking-wider uppercase">
-          Select Wallet
+      <div className="space-y-3">
+        <div className="text-muted-foreground flex items-center gap-2 font-mono text-xs tracking-wider uppercase">
+          <div className="bg-primary h-1.5 w-1.5" />
+          <span>Select Wallet</span>
         </div>
         <div className="flex flex-col gap-2">
           {wallets.map((connector) => (
-            <Button
+            <button
               key={connector.id}
-              variant="outline"
-              size="sm"
               onClick={() => {
                 connect({ connector })
                 setShowWallets(false)
               }}
               disabled={isPending}
-              className="justify-start"
+              className="border-border hover:border-primary hover:bg-primary/5 group flex items-center gap-3 border bg-transparent p-3 text-left transition-all disabled:opacity-40"
             >
               {connector.icon && (
                 <img
                   src={connector.icon}
                   alt={connector.name}
-                  className="mr-2 h-4 w-4"
+                  className="h-5 w-5"
                 />
               )}
-              <span className="font-mono text-xs">{connector.name}</span>
-            </Button>
+              <span className="font-mono text-sm">{connector.name}</span>
+            </button>
           ))}
         </div>
+        <button
+          onClick={() => setShowWallets(false)}
+          className="text-muted-foreground hover:text-foreground font-mono text-xs transition-colors"
+        >
+          ← Back
+        </button>
       </div>
     )
   }
 
-  // Single wallet - show simple connect button
   return (
-    <Button
-      onClick={() => {
-        const firstWallet = wallets[0]
-        if (wallets.length === 1 && firstWallet) {
-          connect({ connector: firstWallet })
-        } else {
-          setShowWallets(true)
-        }
-      }}
-      disabled={isPending}
-    >
+    <Button onClick={handleConnect} disabled={isPending}>
       {isPending ? 'Connecting...' : 'Connect Wallet'}
     </Button>
   )
