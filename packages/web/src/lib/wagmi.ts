@@ -1,14 +1,6 @@
-import { getDefaultWallets } from '@rainbow-me/rainbowkit'
 import type { Chain } from 'viem'
 import * as allChains from 'viem/chains'
 import { createConfig, http } from 'wagmi'
-
-const WALLETCONNECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_ID || 'demo'
-
-const { connectors } = getDefaultWallets({
-  appName: 'browser-rpc',
-  projectId: WALLETCONNECT_ID,
-})
 
 // Find a chain by ID from viem's chain list
 function findChainById(chainId: number): Chain | undefined {
@@ -71,7 +63,6 @@ export async function createWagmiConfig(): Promise<WagmiConfigResult> {
 
   const config = createConfig({
     chains: [chain],
-    connectors: [...connectors],
     transports: {
       [chain.id]: http('/'),
     },

@@ -1,9 +1,3 @@
-import {
-  RainbowKitProvider,
-  darkTheme,
-  lightTheme,
-} from '@rainbow-me/rainbowkit'
-import '@rainbow-me/rainbowkit/styles.css'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { Route, Routes } from 'react-router'
@@ -24,22 +18,6 @@ export function useProxyChain(): Chain {
     throw new Error('useProxyChain must be used within App')
   }
   return chain
-}
-
-// RainbowKit theme - automatically switches based on prefers-color-scheme
-const theme = {
-  lightMode: lightTheme({
-    accentColor: 'hsl(160, 85%, 35%)',
-    accentColorForeground: 'hsl(0, 0%, 100%)',
-    borderRadius: 'none',
-    fontStack: 'system',
-  }),
-  darkMode: darkTheme({
-    accentColor: 'hsl(160, 100%, 45%)',
-    accentColorForeground: 'hsl(220, 15%, 6%)',
-    borderRadius: 'none',
-    fontStack: 'system',
-  }),
 }
 
 export default function App() {
@@ -90,33 +68,31 @@ export default function App() {
   return (
     <WagmiProvider config={configResult.config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={theme}>
-          <ChainContext.Provider value={configResult.chain}>
-            <div className="bg-background min-h-screen">
-              <Routes>
-                <Route path="/tx/:id" element={<TransactionPage />} />
-                <Route
-                  path="/"
-                  element={
-                    <div className="flex min-h-screen items-center justify-center">
-                      <div className="space-y-4 text-center">
-                        <div className="flex items-center justify-center gap-3">
-                          <div className="bg-primary h-2 w-2 animate-pulse" />
-                          <p className="text-muted-foreground font-mono text-sm tracking-wider uppercase">
-                            Awaiting Transactions
-                          </p>
-                        </div>
-                        <p className="text-muted-foreground/60 font-mono text-xs">
-                          Run a script to see transactions here
+        <ChainContext.Provider value={configResult.chain}>
+          <div className="bg-background min-h-screen">
+            <Routes>
+              <Route path="/tx/:id" element={<TransactionPage />} />
+              <Route
+                path="/"
+                element={
+                  <div className="flex min-h-screen items-center justify-center">
+                    <div className="space-y-4 text-center">
+                      <div className="flex items-center justify-center gap-3">
+                        <div className="bg-primary h-2 w-2 animate-pulse" />
+                        <p className="text-muted-foreground font-mono text-sm tracking-wider uppercase">
+                          Awaiting Transactions
                         </p>
                       </div>
+                      <p className="text-muted-foreground/60 font-mono text-xs">
+                        Run a script to see transactions here
+                      </p>
                     </div>
-                  }
-                />
-              </Routes>
-            </div>
-          </ChainContext.Provider>
-        </RainbowKitProvider>
+                  </div>
+                }
+              />
+            </Routes>
+          </div>
+        </ChainContext.Provider>
       </QueryClientProvider>
     </WagmiProvider>
   )

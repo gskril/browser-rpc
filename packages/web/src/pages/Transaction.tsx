@@ -1,4 +1,3 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useState } from 'react'
 import { useParams } from 'react-router'
 import { type Hex, formatEther } from 'viem'
@@ -12,6 +11,7 @@ import {
 } from 'wagmi'
 
 import { useProxyChain } from '@/App'
+import { ConnectButton } from '@/components/ConnectButton'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -210,7 +210,7 @@ export default function TransactionPage() {
             </div>
           </div>
           <div className="pt-4">
-            <ConnectButton showBalance={false} />
+            <ConnectButton />
           </div>
         </CardHeader>
 
