@@ -1,31 +1,24 @@
 import type { Chain } from 'viem'
-import * as allChains from 'viem/chains'
 import { createConfig, http } from 'wagmi'
 
-// Find a chain by ID from viem's chain list
-function findChainById(chainId: number): Chain | undefined {
-  for (const chain of Object.values(allChains)) {
-    if (
-      typeof chain === 'object' &&
-      chain !== null &&
-      'id' in chain &&
-      (chain as Chain).id === chainId
-    ) {
-      return chain as Chain
-    }
-  }
-  return undefined
-}
+import { chainMap } from './chains.generated'
 
-// Create a minimal chain definition for unknown chains
-function createUnknownChain(chainId: number): Chain {
+const DEFAULT_NATIVE_CURRENCY = { name: 'Ether', symbol: 'ETH', decimals: 18 }
+
+// Build a Chain object from chain ID, using generated metadata if available
+function buildChain(chainId: number): Chain {
+  const meta = chainMap[chainId]
+
   return {
     id: chainId,
-    name: `Chain ${chainId}`,
-    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    name: meta?.name ?? `Chain ${chainId}`,
+    nativeCurrency: meta?.nativeCurrency ?? DEFAULT_NATIVE_CURRENCY,
     rpcUrls: {
       default: { http: ['/'] },
     },
+    blockExplorers: meta?.blockExplorer
+      ? { default: { name: 'Explorer', url: meta.blockExplorer } }
+      : undefined,
   }
 }
 
@@ -56,10 +49,7 @@ export interface WagmiConfigResult {
 // Create wagmi config with the chain from the proxy
 export async function createWagmiConfig(): Promise<WagmiConfigResult> {
   const chainId = await fetchProxyChainId()
-
-  // Try to find a known chain, otherwise create a minimal one
-  const knownChain = findChainById(chainId)
-  const chain: Chain = knownChain ?? createUnknownChain(chainId)
+  const chain = buildChain(chainId)
 
   const config = createConfig({
     chains: [chain],

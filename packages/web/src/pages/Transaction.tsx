@@ -260,7 +260,9 @@ function TransactionDetails({
       )}
       {tx.value && tx.value !== '0x0' && (
         <Field label="Value">
-          <span className="font-mono">{formatEther(BigInt(tx.value))} ETH</span>
+          <span className="font-mono">
+            {formatEther(BigInt(tx.value))} {proxyChain.nativeCurrency.symbol}
+          </span>
         </Field>
       )}
       {tx.data && tx.data !== '0x' && (

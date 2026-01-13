@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "bun run scripts/generate-chains.ts && tsc && vite build",
+    "generate-chains": "bun run scripts/generate-chains.ts",
     "preview": "vite preview"
   },
   "dependencies": {

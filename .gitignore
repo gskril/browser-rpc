@@ -5,6 +5,7 @@ node_modules/
 dist/
 build/
 packages/web/dist/
+packages/web/src/lib/chains.generated.ts
 packages/server/web-dist/
 packages/server/README.md
 
