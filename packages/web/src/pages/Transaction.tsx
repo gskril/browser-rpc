@@ -52,7 +52,7 @@ function ChainMismatchWarning({
   expectedChainId: number
   walletChainId: number
 }) {
-  const { mutate: switchChain, isPending } = useSwitchChain()
+  const { switchChain, isPending } = useSwitchChain()
 
   function handleSwitch(): void {
     switchChain({ chainId: expectedChainId })
@@ -348,9 +348,9 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
   const [txHash, setTxHash] = useState<string | null>(null)
   const [explorerUrl, setExplorerUrl] = useState<string | null>(null)
 
-  const { mutateAsync: sendTransactionAsync } = useSendTransaction()
-  const { mutateAsync: signMessageAsync } = useSignMessage()
-  const { mutateAsync: signTypedDataAsync } = useSignTypedData()
+  const { sendTransactionAsync } = useSendTransaction()
+  const { signMessageAsync } = useSignMessage()
+  const { signTypedDataAsync } = useSignTypedData()
 
   async function handleExecute(): Promise<void> {
     setStatus('pending')
