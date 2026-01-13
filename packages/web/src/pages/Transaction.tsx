@@ -1,4 +1,3 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useState } from 'react'
 import { useParams } from 'react-router'
 import { type Hex, formatEther } from 'viem'
@@ -10,6 +9,8 @@ import {
   useSignTypedData,
   useSwitchChain,
 } from 'wagmi'
+
+import { ConnectButton } from '@/components/ConnectButton'
 
 import { useProxyChain } from '@/App'
 import { Button } from '@/components/ui/button'
@@ -52,7 +53,7 @@ function ChainMismatchWarning({
   expectedChainId: number
   walletChainId: number
 }) {
-  const { switchChain, isPending } = useSwitchChain()
+  const { mutate: switchChain, isPending } = useSwitchChain()
 
   function handleSwitch(): void {
     switchChain({ chainId: expectedChainId })
@@ -210,7 +211,7 @@ export default function TransactionPage() {
             </div>
           </div>
           <div className="pt-4">
-            <ConnectButton showBalance={false} />
+            <ConnectButton />
           </div>
         </CardHeader>
 
@@ -348,9 +349,9 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
   const [txHash, setTxHash] = useState<string | null>(null)
   const [explorerUrl, setExplorerUrl] = useState<string | null>(null)
 
-  const { sendTransactionAsync } = useSendTransaction()
-  const { signMessageAsync } = useSignMessage()
-  const { signTypedDataAsync } = useSignTypedData()
+  const { mutateAsync: sendTransactionAsync } = useSendTransaction()
+  const { mutateAsync: signMessageAsync } = useSignMessage()
+  const { mutateAsync: signTypedDataAsync } = useSignTypedData()
 
   async function handleExecute(): Promise<void> {
     setStatus('pending')
