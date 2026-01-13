@@ -10,9 +10,8 @@ import {
   useSwitchChain,
 } from 'wagmi'
 
-import { ConnectButton } from '@/components/ConnectButton'
-
 import { useProxyChain } from '@/App'
+import { ConnectButton } from '@/components/ConnectButton'
 import { Button } from '@/components/ui/button'
 import {
   Card,
