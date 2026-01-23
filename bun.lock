@@ -22,7 +22,7 @@
     },
     "packages/server": {
       "name": "browser-rpc",
-      "version": "0.0.6",
+      "version": "0.0.8",
       "bin": {
         "browser-rpc": "dist/index.js",
       },

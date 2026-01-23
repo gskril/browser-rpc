@@ -248,6 +248,8 @@ function TransactionDetails({
 }) {
   const proxyChain = useProxyChain()
   const tx = request.transaction
+  // Foundry uses "input" instead of "data"
+  const txData = tx.data || tx.input
 
   return (
     <div className="space-y-4">
@@ -258,6 +260,11 @@ function TransactionDetails({
           </code>
         </Field>
       )}
+      {!tx.to && txData && (
+        <Field label="Type">
+          <span className="font-mono text-primary">Contract Deployment</span>
+        </Field>
+      )}
       {tx.value && tx.value !== '0x0' && (
         <Field label="Value">
           <span className="font-mono">
@@ -265,10 +272,10 @@ function TransactionDetails({
           </span>
         </Field>
       )}
-      {tx.data && tx.data !== '0x' && (
+      {txData && txData !== '0x' && (
         <Field label="Data">
           <code className="bg-muted/50 border-border block max-h-32 overflow-auto border p-3 font-mono text-xs break-all">
-            {tx.data}
+            {txData}
           </code>
         </Field>
       )}
@@ -391,10 +398,12 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
     transactionRequest: Extract<PendingRequest, { type: 'transaction' }>
   ): Promise<string> {
     const tx = transactionRequest.transaction
+    // Foundry uses "input" instead of "data" for transaction data
+    const txData = tx.data || tx.input
     const hash = await sendTransactionAsync({
-      to: tx.to as Hex | undefined,
+      to: (tx.to || undefined) as Hex | undefined,
       value: tx.value ? BigInt(tx.value) : undefined,
-      data: tx.data as Hex | undefined,
+      data: (txData || undefined) as Hex | undefined,
       gas: tx.gas ? BigInt(tx.gas) : undefined,
       gasPrice: tx.gasPrice ? BigInt(tx.gasPrice) : undefined,
       maxFeePerGas: tx.maxFeePerGas ? BigInt(tx.maxFeePerGas) : undefined,

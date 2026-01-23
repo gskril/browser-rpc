@@ -2,13 +2,14 @@ import { type UseQueryResult, useQuery } from '@tanstack/react-query'
 
 export interface TransactionRequest {
   from?: string
-  to?: string
+  to?: string | null
   gas?: string
   gasPrice?: string
   maxFeePerGas?: string
   maxPriorityFeePerGas?: string
   value?: string
   data?: string
+  input?: string // Some tools (Foundry) use "input" instead of "data"
   nonce?: string
   chainId?: string
 }
