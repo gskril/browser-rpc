@@ -1,3 +1,4 @@
+import type { PendingRequest } from 'browser-rpc/types'
 import { useState } from 'react'
 import { useParams } from 'react-router'
 import { type Hex, formatEther } from 'viem'
@@ -22,7 +23,6 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import {
-  type PendingRequest,
   completeRequest,
   notifyTransactionHash,
   usePendingTransaction,
@@ -262,7 +262,7 @@ function TransactionDetails({
       )}
       {!tx.to && txData && (
         <Field label="Type">
-          <span className="font-mono text-primary">Contract Deployment</span>
+          <span className="text-primary font-mono">Contract Deployment</span>
         </Field>
       )}
       {tx.value && tx.value !== '0x0' && (

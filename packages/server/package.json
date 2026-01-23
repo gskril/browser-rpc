@@ -3,6 +3,9 @@
   "version": "0.0.8",
   "description": "Local RPC proxy that routes Ethereum transactions through your browser wallet",
   "type": "module",
+  "exports": {
+    "./types": "./src/types.ts"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gskril/browser-rpc.git",

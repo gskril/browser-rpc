@@ -1,51 +1,5 @@
 import { type UseQueryResult, useQuery } from '@tanstack/react-query'
-
-export interface TransactionRequest {
-  from?: string
-  to?: string | null
-  gas?: string
-  gasPrice?: string
-  maxFeePerGas?: string
-  maxPriorityFeePerGas?: string
-  value?: string
-  data?: string
-  input?: string // Some tools (Foundry) use "input" instead of "data"
-  nonce?: string
-  chainId?: string
-}
-
-export interface PendingTransactionRequest {
-  type: 'transaction'
-  id: string
-  jsonRpcId: number | string
-  transaction: TransactionRequest
-  createdAt: number
-}
-
-export interface PendingSignTypedDataRequest {
-  type: 'signTypedData'
-  id: string
-  jsonRpcId: number | string
-  request: {
-    address: string
-    typedData: unknown
-  }
-  createdAt: number
-}
-
-export interface PendingSignRequest {
-  type: 'sign'
-  id: string
-  jsonRpcId: number | string
-  address: string
-  message: string
-  createdAt: number
-}
-
-export type PendingRequest =
-  | PendingTransactionRequest
-  | PendingSignTypedDataRequest
-  | PendingSignRequest
+import type { PendingRequest } from 'browser-rpc/types'
 
 async function fetchPendingRequest(id: string): Promise<PendingRequest> {
   const response = await fetch(`/api/pending/${id}`)
