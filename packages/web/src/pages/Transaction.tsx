@@ -3,8 +3,7 @@ import { useState } from 'react'
 import { useParams } from 'react-router'
 import { type Hex, formatEther } from 'viem'
 import {
-  useAccount,
-  useChainId,
+  useConnection,
   useSendTransaction,
   useSignMessage,
   useSignTypedData,
@@ -46,11 +45,9 @@ function StatusIndicator({ status }: { status: StatusIndicatorStatus }) {
 function ChainMismatchWarning({
   expectedChainName,
   expectedChainId,
-  walletChainId,
 }: {
   expectedChainName: string
   expectedChainId: number
-  walletChainId: number
 }) {
   const { switchChain, isPending } = useSwitchChain()
 
@@ -63,14 +60,11 @@ function ChainMismatchWarning({
       <div className="mb-2 flex items-center gap-2">
         <StatusIndicator status="error" />
         <p className="text-sm font-medium tracking-wider text-red-400 uppercase">
-          Chain Mismatch
+          Wrong Network
         </p>
       </div>
       <p className="text-muted-foreground mb-3 font-mono text-sm">
-        Expected: <span className="text-foreground">{expectedChainName}</span>
-        <br />
-        Connected:{' '}
-        <span className="text-foreground">Chain {walletChainId}</span>
+        Please switch to <span className="text-foreground">{expectedChainName}</span> to continue.
       </p>
       <Button
         variant="outline"
@@ -129,8 +123,11 @@ function getRequestTitle(request: PendingRequest) {
 export default function TransactionPage() {
   const { id } = useParams<{ id: string }>()
   const { data: pendingRequest, isLoading, error } = usePendingTransaction(id!)
-  const { isConnected, address: connectedAddress } = useAccount()
-  const walletChainId = useChainId()
+  const {
+    isConnected,
+    address: connectedAddress,
+    chainId: walletChainId,
+  } = useConnection()
   const proxyChain = useProxyChain()
   const { data: serverConfig } = useServerConfig()
 
@@ -219,7 +216,6 @@ export default function TransactionPage() {
             <ChainMismatchWarning
               expectedChainName={proxyChain.name}
               expectedChainId={proxyChain.id}
-              walletChainId={walletChainId}
             />
           )}
           {hasAddressMismatch &&
