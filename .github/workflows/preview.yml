@@ -1,0 +1,32 @@
+name: Preview Release
+
+on: [push, pull_request]
+
+permissions: {}
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.8
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # Builds the web UI, syncs it into the server package (web-dist), then
+      # builds the server. `bun run --filter web build` also runs `tsc`.
+      - name: Build
+        run: bun run build
+
+      # Include the README in the previewed tarball, matching `publish:server`.
+      - name: Copy README into server package
+        run: cp README.md packages/server/
+
+      # Publish a preview of the `browser-rpc` CLI package for this commit/PR.
+      # `--bin` shows an `npx`/`bunx` command instead of `npm i`.
+      - name: Publish preview
+        run: bunx pkg-pr-new publish './packages/server' --bin
