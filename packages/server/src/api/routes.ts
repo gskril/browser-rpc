@@ -1,16 +1,9 @@
 import { Hono } from 'hono'
-import { cors } from 'hono/cors'
 
 import { logger } from '../logger.js'
-import {
-  getAllPendingIds,
-  getPendingRequest,
-  resolvePendingRequest,
-} from '../pending/store.js'
+import { getPendingRequest, resolvePendingRequest } from '../pending/store.js'
 
 const api = new Hono()
-
-api.use('/*', cors())
 
 // Get a pending request by ID
 api.get('/pending/:id', (c) => {
@@ -51,11 +44,21 @@ api.post('/tx/:id/hash', async (c) => {
 // Complete a pending request
 api.post('/complete/:id', async (c) => {
   const { id } = c.req.param()
-  const body = await c.req.json<{
-    success: boolean
-    result?: string
-    error?: string
-  }>()
+
+  let body: { success?: boolean; result?: string; error?: string } | null = null
+  try {
+    body = await c.req.json<{
+      success?: boolean
+      result?: string
+      error?: string
+    }>()
+  } catch {
+    return c.json({ error: 'Invalid JSON payload' }, 400)
+  }
+
+  if (typeof body?.success !== 'boolean') {
+    return c.json({ error: 'Missing or invalid "success" field' }, 400)
+  }
 
   const resolved = resolvePendingRequest(id, {
     success: body.success,
@@ -67,12 +70,6 @@ api.post('/complete/:id', async (c) => {
     return c.json({ error: 'Request not found or already completed' }, 404)
   }
   return c.json({ ok: true })
-})
-
-// List all pending request IDs (useful for debugging)
-api.get('/pending', (c) => {
-  const ids = getAllPendingIds()
-  return c.json({ pending: ids })
 })
 
 export { api }
