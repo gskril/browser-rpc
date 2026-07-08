@@ -59,7 +59,11 @@ async function main(): Promise<void> {
     open: boolean
   }>()
 
-  const port = parseInt(options.port, 10)
+  const port = Number.parseInt(options.port, 10)
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    logger.fatal(`Invalid --port value: ${options.port}`)
+    process.exit(1)
+  }
 
   logger.dim('Checking upstream RPC chain ID...')
   let chainIdHex: string
@@ -95,6 +99,9 @@ async function main(): Promise<void> {
   serve({
     fetch: server.fetch,
     port,
+    // Bind to loopback only. This server triggers wallet signing, so it must
+    // never be reachable from other machines on the network.
+    hostname: '127.0.0.1',
   })
 
   logger.raw(`

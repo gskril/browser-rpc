@@ -1,7 +1,7 @@
 import type { PendingRequest } from 'browser-rpc/types'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useParams } from 'react-router'
-import { type Hex, formatEther } from 'viem'
+import { type Hex, formatEther, isHex } from 'viem'
 import {
   useConnection,
   useSendTransaction,
@@ -64,7 +64,9 @@ function ChainMismatchWarning({
         </p>
       </div>
       <p className="text-muted-foreground mb-3 font-mono text-sm">
-        Please switch to <span className="text-foreground">{expectedChainName}</span> to continue.
+        Please switch to{' '}
+        <span className="text-foreground">{expectedChainName}</span> to
+        continue.
       </p>
       <Button
         variant="outline"
@@ -357,27 +359,45 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
   const { signMessageAsync } = useSignMessage()
   const { signTypedDataAsync } = useSignTypedData()
 
+  // Synchronous re-entrancy guard: `status` only updates on re-render, so two
+  // clicks dispatched before that would both broadcast. A ref blocks instantly.
+  const isExecutingRef = useRef(false)
+
   async function handleExecute(): Promise<void> {
+    if (isExecutingRef.current) return
+    isExecutingRef.current = true
     setStatus('pending')
     setErrorMessage('')
 
+    let result: string
     try {
-      const result = await executeRequest()
-      await completeRequest(request.id, { success: true, result })
-      setStatus('success')
+      result = await executeRequest()
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error'
       setErrorMessage(message)
       setStatus('error')
-
-      // If user rejected, notify the server
-      if (message.includes('rejected') || message.includes('denied')) {
-        await completeRequest(request.id, {
-          success: false,
-          error: 'User rejected request',
-        })
-      }
+      // Always notify the server on failure so the calling script gets an
+      // immediate rejection instead of blocking until the 5-minute timeout.
+      await completeRequest(request.id, {
+        success: false,
+        error: message,
+      }).catch((completeError) => {
+        console.warn('Failed to notify server of failure', completeError)
+      })
+      isExecutingRef.current = false
+      return
     }
+
+    // The transaction/signature already succeeded on-chain / in the wallet.
+    // A failure reporting completion back to the server is a bookkeeping issue,
+    // not a transaction failure, so don't show the user a scary error.
+    await completeRequest(request.id, { success: true, result }).catch(
+      (completeError) => {
+        console.warn('Failed to notify server of completion', completeError)
+      }
+    )
+    setStatus('success')
+    isExecutingRef.current = false
   }
 
   async function executeRequest(): Promise<string> {
@@ -437,8 +457,12 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
   async function executeSignMessageRequest(
     signMessageRequest: Extract<PendingRequest, { type: 'sign' }>
   ): Promise<string> {
+    const { message } = signMessageRequest
+    // eth_sign / personal_sign deliver the message as a hex string. Passing a
+    // hex string straight to signMessage would sign its UTF-8 characters (the
+    // literal "0x..."); wrap it as `{ raw }` so the decoded bytes are signed.
     return signMessageAsync({
-      message: signMessageRequest.message,
+      message: isHex(message) ? { raw: message } : message,
     })
   }
 

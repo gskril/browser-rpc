@@ -12,6 +12,7 @@ import type {
 interface PendingEntry {
   request: PendingRequest
   resolve: (result: PendingRequestResult) => void
+  timer: ReturnType<typeof setTimeout>
 }
 
 type PendingResult = { id: string; promise: Promise<PendingRequestResult> }
@@ -19,6 +20,9 @@ type PendingResult = { id: string; promise: Promise<PendingRequestResult> }
 const pending = new Map<string, PendingEntry>()
 
 const REQUEST_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
+
+// Cap the number of concurrent pending requests to bound memory / open tabs.
+const MAX_PENDING = 100
 
 export function createPendingTransaction(
   jsonRpcId: number | string,
@@ -72,22 +76,28 @@ function createPendingEntry(
   id: string,
   request: PendingRequest
 ): PendingResult {
+  if (pending.size >= MAX_PENDING) {
+    throw new Error('Too many pending requests')
+  }
+
   let resolve: (result: PendingRequestResult) => void
   const promise = new Promise<PendingRequestResult>((res) => {
     resolve = res
   })
 
-  // Store entry (resolve is guaranteed assigned after Promise constructor)
-  pending.set(id, { request, resolve: resolve! })
-
   // Auto-timeout after 5 minutes
-  setTimeout(() => {
+  const timer = setTimeout(() => {
     const entry = pending.get(id)
     if (entry) {
       entry.resolve({ success: false, error: 'Request timed out' })
       pending.delete(id)
     }
   }, REQUEST_TIMEOUT_MS)
+  // Don't let a pending request keep the process alive on its own.
+  timer.unref?.()
+
+  // Store entry (resolve is guaranteed assigned after Promise constructor)
+  pending.set(id, { request, resolve: resolve!, timer })
 
   return { id, promise }
 }
@@ -105,15 +115,8 @@ export function resolvePendingRequest(
     return false
   }
 
+  clearTimeout(entry.timer)
   entry.resolve(result)
   pending.delete(id)
   return true
-}
-
-export function getPendingCount(): number {
-  return pending.size
-}
-
-export function getAllPendingIds(): string[] {
-  return Array.from(pending.keys())
 }

@@ -1,8 +1,7 @@
 import { serveStatic } from '@hono/node-server/serve-static'
 import { existsSync, readFileSync } from 'fs'
-import type { Context } from 'hono'
+import type { Context, Next } from 'hono'
 import { Hono } from 'hono'
-import { cors } from 'hono/cors'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
@@ -33,10 +32,49 @@ export interface ServerConfig {
   onPendingRequest: (id: string, url: string) => void
 }
 
+// Maximum number of requests accepted in a single JSON-RPC batch. Prevents a
+// single POST from spawning an unbounded number of pending requests / tabs.
+const MAX_BATCH_SIZE = 50
+
+/**
+ * Restrict the server to local use only. This is the security boundary: the
+ * server triggers wallet-signing prompts and exposes pending-transaction data,
+ * so it must not be drivable by other websites or other machines.
+ *
+ * - Host allowlist blocks DNS-rebinding (a remote page resolving a hostname to
+ *   127.0.0.1 still sends its own Host header).
+ * - Origin allowlist blocks cross-origin browser requests (CSRF). Non-browser
+ *   dev tools (Foundry, Hardhat, curl) send no Origin header and are allowed.
+ */
+function createLocalOnlyGuard(port: number) {
+  const allowedHosts = new Set([
+    `localhost:${port}`,
+    `127.0.0.1:${port}`,
+    `[::1]:${port}`,
+  ])
+  const allowedOrigins = new Set([
+    `http://localhost:${port}`,
+    `http://127.0.0.1:${port}`,
+    `http://[::1]:${port}`,
+  ])
+
+  return async function localOnlyGuard(c: Context, next: Next) {
+    const host = c.req.header('host')
+    if (!host || !allowedHosts.has(host)) {
+      return c.text('Forbidden', 403)
+    }
+    const origin = c.req.header('origin')
+    if (origin && !allowedOrigins.has(origin)) {
+      return c.text('Forbidden', 403)
+    }
+    return next()
+  }
+}
+
 export function createServer(config: ServerConfig): Hono {
   const app = new Hono()
 
-  app.use('*', cors())
+  app.use('*', createLocalOnlyGuard(config.port))
 
   // Mount API routes
   app.route('/api', api)
@@ -56,6 +94,16 @@ export function createServer(config: ServerConfig): Hono {
 
       // Handle batch requests
       if (Array.isArray(body)) {
+        if (body.length > MAX_BATCH_SIZE) {
+          return c.json(
+            {
+              jsonrpc: '2.0',
+              id: null,
+              error: { code: -32600, message: 'Batch too large' },
+            },
+            400
+          )
+        }
         const methods = body.map((req: JsonRpcRequest) => req.method).join(', ')
         logger.dim(`<- [${methods}]`)
         const responses = await Promise.all(
@@ -95,6 +143,10 @@ export function createServer(config: ServerConfig): Hono {
       fromAddress: config.fromAddress || null,
     })
   )
+
+  // Unknown API routes return JSON 404 instead of falling through to the SPA
+  // page (which would otherwise return 200 HTML for e.g. a mistyped endpoint).
+  app.all('/api/*', (c) => c.json({ error: 'Not found' }, 404))
 
   // Serve static assets from web dist
   app.use('/assets/*', serveStatic({ root: webDistPath }))
