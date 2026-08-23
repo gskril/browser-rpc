@@ -29,5 +29,10 @@
     "tailwindcss": "4.1.18",
     "typescript": "5.9.3",
     "vite": "7.3.6"
+  },
+  "overrides": {
+    "postcss": "^8.5.26",
+    "rollup": "^4.62.0",
+    "picomatch": "^4.0.5"
   }
 }
