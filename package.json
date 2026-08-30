@@ -18,8 +18,5 @@
     "prettier": "3.7.4",
     "prettier-plugin-tailwindcss": "0.7.2"
   },
-  "overrides": {
-    "ws": "^8.20.1"
-  },
   "packageManager": "bun@1.2.8"
 }
